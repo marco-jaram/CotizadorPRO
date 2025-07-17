@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Empresas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Opcional: Iconos de Font Awesome para botones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<!-- Incluimos la barra de navegación -->
+<div th:replace="~{_fragments :: navbar}"></div>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>Gestión de Empresas</h2>
+        <a th:href="@{/empresas/nueva}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Crear Nueva Empresa
+        </a>
+    </div>
+    <hr/>
+
+    <div th:if="${empresas.isEmpty()}" class="alert alert-info">
+        No hay empresas registradas todavía. ¡Crea la primera!
+    </div>
+
+    <table th:unless="${empresas.isEmpty()}" class="table table-bordered table-striped table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Logo</th>
+            <th>Nombre de la Empresa</th>
+            <th>Contacto</th>
+            <th>Correo</th>
+            <!-- Podríamos añadir una columna de "Acciones" para editar/eliminar en el futuro -->
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Iteramos sobre la lista de empresas que pasamos desde el controlador -->
+        <tr th:each="empresa : ${empresas}">
+            <td th:text="${empresa.id}" style="vertical-align: middle;">1</td>
+            <td style="text-align: center; vertical-align: middle;">
+                <!-- Mostramos el logo si existe, usando el endpoint que creamos -->
+                <img th:if="${empresa.logo != null && empresa.logo.length > 0}"
+                     th:src="@{/empresas/{id}/logo(id=${empresa.id})}"
+                     alt="Logo"
+                     style="width: 100px; height: auto; border-radius: 4px;"/>
+                <span th:unless="${empresa.logo != null && empresa.logo.length > 0}" class="text-muted">Sin logo</span>
+            </td>
+            <td th:text="${empresa.nombreEmpresa}" style="vertical-align: middle;">Tech Solutions S.A.</td>
+            <td th:text="${empresa.nombreContacto}" style="vertical-align: middle;">Juan Perez</td>
+            <td th:text="${empresa.correo}" style="vertical-align: middle;">juan.perez@techsolutions.com</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

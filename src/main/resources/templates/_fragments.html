@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    Este archivo contiene fragmentos de HTML que se pueden reutilizar en otras páginas.
+    El fragmento principal es la barra de navegación (navbar).
+-->
+
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/}">Cotizador Pro</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Inicio</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCotizaciones" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Cotizaciones
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownCotizaciones">
+                        <li><a class="dropdown-item" th:href="@{/cotizaciones/servicios/nueva}">Nueva de Servicios</a></li>
+                        <li><a class="dropdown-item" th:href="@{/cotizaciones/productos/nueva}">Nueva de Productos</a></li>
+                        <!-- Aquí podríamos añadir un link a "Ver Todas" en el futuro -->
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/empresas}">Empresas</a>
+                </li>
+                <!-- Podríamos añadir un link a "Productos" si creamos su CRUD -->
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!--
+    (Opcional) Aquí podríamos añadir otros fragmentos, como un pie de página (footer)
+    <footer th:fragment="footer" class="container mt-5 text-center">
+        <p>© Tu Empresa 2024</p>
+    </footer>
+-->
+
+</body>
+</html>

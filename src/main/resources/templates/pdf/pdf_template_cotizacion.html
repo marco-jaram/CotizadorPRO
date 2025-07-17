@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Cotización</title>
+    <!-- Los estilos CSS deben estar aquí dentro o en un archivo CSS linkeado -->
+    <!-- Flying Saucer tiene mejor soporte para CSS 2.1 -->
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        .header, .footer {
+            width: 100%;
+            text-align: center;
+            position: fixed;
+        }
+        .header { top: -50px; }
+        .footer { bottom: 0px; }
+        .info-container {
+            display: block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .vendedor-info {
+            float: left;
+            width: 48%;
+        }
+        .cliente-info {
+            float: right;
+            width: 48%;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-section {
+            margin-top: 20px;
+            float: right;
+            width: 40%;
+        }
+        .total-section table {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Cotización</h1>
+</div>
+
+<!-- Contenido principal -->
+<div th:with="cot=${cotizacion}" class="main-content">
+    <p style="text-align: right;">
+        <strong>Folio:</strong> <span th:text="${cot.folio}">C-001</span><br/>
+        <strong>Fecha de Emisión:</strong> <span th:text="${#temporals.format(cot.fechaEmision, 'dd/MM/yyyy')}">01/01/2024</span><br/>
+        <strong>Vigencia:</strong> <span th:text="${cot.vigencia}">30 días</span>
+    </p>
+
+    <div class="info-container clearfix">
+        <div class="vendedor-info">
+            <h3>De:</h3>
+            <strong th:text="${cot.vendedor.nombreEmpresa}">Mi Empresa Vendedora</strong><br/>
+            <span th:text="${cot.vendedor.direccion}">Mi Dirección Completa</span><br/>
+            <span th:text="${cot.vendedor.correo}">contacto@miempresa.com</span>
+        </div>
+        <div class="cliente-info">
+            <h3>Para:</h3>
+            <strong th:text="${cot.cliente.nombreEmpresa}">Empresa Cliente</strong><br/>
+            <span th:text="${cot.cliente.direccion}">Dirección del Cliente</span><br/>
+            <span th:text="${cot.cliente.nombreContacto}">Contacto Cliente</span>
+        </div>
+    </div>
+
+    <!-- Tabla para Cotización de SERVICIOS -->
+    <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
+        <table>
+            <thead>
+            <tr>
+                <th>Concepto</th>
+                <th style="width:15%; text-align:right;">Cantidad</th>
+                <th style="width:20%; text-align:right;">Precio Unit.</th>
+                <th style="width:20%; text-align:right;">Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="linea : ${cotizacion.lineas}">
+                <td th:text="${linea.concepto}">Servicio de Consultoría</td>
+                <td th:text="${linea.cantidad}" style="text-align:right;">10</td>
+                <td th:text="${#numbers.formatCurrency(linea.precioUnitario)}" style="text-align:right;">$100.00</td>
+                <td th:text="${#numbers.formatCurrency(linea.subtotal)}" style="text-align:right;">$1,000.00</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="total-section">
+            <table>
+                <tr>
+                    <td><strong>Total:</strong></td>
+                    <td style="text-align:right;"><strong th:text="${#numbers.formatCurrency(cotizacion.total)}">$1,000.00</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tabla para Cotización de PRODUCTOS -->
+    <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
+        <table>
+            <thead>
+            <tr>
+                <th>Producto</th>
+                <th style="width:15%; text-align:right;">Cantidad</th>
+                <th style="width:20%; text-align:right;">Precio Unit.</th>
+                <th style="width:20%; text-align:right;">Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="linea : ${cotizacion.lineas}">
+                <td th:text="${linea.productoNombre}">Laptop XYZ</td>
+                <td th:text="${linea.cantidad}" style="text-align:right;">2</td>
+                <td th:text="${#numbers.formatCurrency(linea.precioUnitario)}" style="text-align:right;">$15,000.00</td>
+                <td th:text="${#numbers.formatCurrency(linea.subtotal)}" style="text-align:right;">$30,000.00</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="total-section">
+            <table>
+                <tr>
+                    <td><strong>Total:</strong></td>
+                    <td style="text-align:right;"><strong th:text="${#numbers.formatCurrency(cotizacion.total)}">$30,000.00</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

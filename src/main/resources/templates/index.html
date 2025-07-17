@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido al Cotizador Pro</title>
+    <!-- Incluimos Bootstrap 5 para el diseño -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Aquí "mágicamente" insertamos la barra de navegación del otro archivo -->
+<div th:replace="~{_fragments :: navbar}"></div>
+
+<div class="container">
+    <!-- Sección de Bienvenida (Jumbotron) -->
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Sistema de Cotizaciones</h1>
+            <p class="col-md-8 fs-4">
+                Bienvenido. Utilice las opciones del menú o los accesos directos a continuación para
+                gestionar sus cotizaciones de productos y servicios de manera eficiente.
+            </p>
+        </div>
+    </div>
+
+    <!-- Accesos Directos -->
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6 mb-4">
+            <div class="h-100 p-5 text-white bg-primary rounded-3">
+                <h2>Cotizaciones de Servicios</h2>
+                <p>Cree cotizaciones detalladas para consultorías, mantenimientos y otros servicios profesionales.</p>
+                <a class="btn btn-outline-light" th:href="@{/cotizaciones/servicios/nueva}" role="button">
+                    Crear Nueva Cotización de Servicios »
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="h-100 p-5 bg-dark border rounded-3 text-white">
+                <h2>Cotizaciones de Productos</h2>
+                <p>Genere cotizaciones para la venta de productos, seleccionando artículos de su catálogo.</p>
+                <a class="btn btn-outline-light" th:href="@{/cotizaciones/productos/nueva}" role="button">
+                    Crear Nueva Cotización de Productos »
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluimos el JavaScript de Bootstrap al final para un mejor rendimiento -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
