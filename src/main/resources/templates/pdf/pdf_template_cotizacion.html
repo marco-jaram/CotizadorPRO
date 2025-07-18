@@ -3,153 +3,145 @@
 <head>
     <meta charset="UTF-8"/>
     <title>Cotización</title>
-    <!-- Los estilos CSS deben estar aquí dentro o en un archivo CSS linkeado -->
-    <!-- Flying Saucer tiene mejor soporte para CSS 2.1 -->
-    <style>
+    <style type="text/css">
+        body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #333; }
         @page {
             size: A4;
-            margin: 1cm;
+            margin: 1.5cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 9px;
+            }
         }
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-        }
-        .header, .footer {
-            width: 100%;
-            text-align: center;
-            position: fixed;
-        }
-        .header { top: -50px; }
-        .footer { bottom: 0px; }
-        .info-container {
-            display: block;
-            width: 100%;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0056b3;
         }
-        .vendedor-info {
-            float: left;
-            width: 48%;
-        }
-        .cliente-info {
-            float: right;
-            width: 48%;
-        }
-        .clearfix::after {
-            content: "";
-            clear: both;
-            display: table;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .total-section {
-            margin-top: 20px;
+        .company-logo img { max-width: 150px; max-height: 80px; }
+        .quote-title { text-align: right; }
+        .quote-title h1 { margin: 0; color: #0056b3; font-size: 24px; }
+        .quote-title p { margin: 2px 0; }
+        .info-section { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .info-box { width: 48%; background-color: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; }
+        .info-box h5 { margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .info-box ul { list-style: none; padding-left: 0; margin-bottom: 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        thead { background-color: #0056b3; color: white; }
+        .text-right { text-align: right; }
+        .totals-section {
             float: right;
             width: 40%;
         }
-        .total-section table {
+        .totals-section table {
             width: 100%;
+            border: none;
+        }
+        .totals-section td {
+            border: none;
+            padding: 4px 8px;
+        }
+        .totals-section .total-row {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            border-top: 2px solid #333;
+        }
+        .footer {
+            position: fixed;
+            bottom: -1cm; /* Ajustar según márgenes */
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: #777;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
         }
     </style>
 </head>
 <body>
+
 <div class="header">
-    <h1>Cotización</h1>
+    <div class="company-logo">
+        <img th:if="${logoBase64 != ''}" th:src="${logoBase64}" alt="Logo de la Empresa"/>
+        <h3 th:unless="${logoBase64 != ''}" th:text="${cotizacion.vendedor.nombreEmpresa}"></h3>
+    </div>
+    <div class="quote-title">
+        <h1>COTIZACIÓN</h1>
+        <p><strong>Folio:</strong> <span th:text="${cotizacion.folio}"></span></p>
+        <p><strong>Fecha:</strong> <span th:text="${#temporals.format(cotizacion.fechaEmision, 'dd/MM/yyyy')}"></span></p>
+        <p><strong>Vigencia:</strong> <span th:text="${cotizacion.vigencia}"></span></p>
+    </div>
 </div>
 
-<!-- Contenido principal -->
-<div th:with="cot=${cotizacion}" class="main-content">
-    <p style="text-align: right;">
-        <strong>Folio:</strong> <span th:text="${cot.folio}">C-001</span><br/>
-        <strong>Fecha de Emisión:</strong> <span th:text="${#temporals.format(cot.fechaEmision, 'dd/MM/yyyy')}">01/01/2024</span><br/>
-        <strong>Vigencia:</strong> <span th:text="${cot.vigencia}">30 días</span>
-    </p>
-
-    <div class="info-container clearfix">
-        <div class="vendedor-info">
-            <h3>De:</h3>
-            <strong th:text="${cot.vendedor.nombreEmpresa}">Mi Empresa Vendedora</strong><br/>
-            <span th:text="${cot.vendedor.direccion}">Mi Dirección Completa</span><br/>
-            <span th:text="${cot.vendedor.correo}">contacto@miempresa.com</span>
-        </div>
-        <div class="cliente-info">
-            <h3>Para:</h3>
-            <strong th:text="${cot.cliente.nombreEmpresa}">Empresa Cliente</strong><br/>
-            <span th:text="${cot.cliente.direccion}">Dirección del Cliente</span><br/>
-            <span th:text="${cot.cliente.nombreContacto}">Contacto Cliente</span>
-        </div>
+<div class="info-section">
+    <div class="info-box">
+        <h5>VENDEDOR:</h5>
+        <ul>
+            <li th:text="${cotizacion.vendedor.nombreEmpresa}"></li>
+            <li th:text="${cotizacion.vendedor.direccion}"></li>
+            <li th:text="${cotizacion.vendedor.correo}"></li>
+            <li th:text="${cotizacion.vendedor.telefono}"></li>
+        </ul>
     </div>
-
-    <!-- Tabla para Cotización de SERVICIOS -->
-    <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
-        <table>
-            <thead>
-            <tr>
-                <th>Concepto</th>
-                <th style="width:15%; text-align:right;">Cantidad</th>
-                <th style="width:20%; text-align:right;">Precio Unit.</th>
-                <th style="width:20%; text-align:right;">Subtotal</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="linea : ${cotizacion.lineas}">
-                <td th:text="${linea.concepto}">Servicio de Consultoría</td>
-                <td th:text="${linea.cantidad}" style="text-align:right;">10</td>
-                <td th:text="${#numbers.formatCurrency(linea.precioUnitario)}" style="text-align:right;">$100.00</td>
-                <td th:text="${#numbers.formatCurrency(linea.subtotal)}" style="text-align:right;">$1,000.00</td>
-            </tr>
-            </tbody>
-        </table>
-        <div class="total-section">
-            <table>
-                <tr>
-                    <td><strong>Total:</strong></td>
-                    <td style="text-align:right;"><strong th:text="${#numbers.formatCurrency(cotizacion.total)}">$1,000.00</strong></td>
-                </tr>
-            </table>
-        </div>
+    <div class="info-box">
+        <h5>CLIENTE:</h5>
+        <ul>
+            <li th:text="${cotizacion.cliente.nombreEmpresa}"></li>
+            <li th:text="${cotizacion.cliente.direccion}"></li>
+            <li th:text="${cotizacion.cliente.correo}"></li>
+            <li th:text="${cotizacion.cliente.telefono}"></li>
+        </ul>
     </div>
-
-    <!-- Tabla para Cotización de PRODUCTOS -->
-    <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
-        <table>
-            <thead>
-            <tr>
-                <th>Producto</th>
-                <th style="width:15%; text-align:right;">Cantidad</th>
-                <th style="width:20%; text-align:right;">Precio Unit.</th>
-                <th style="width:20%; text-align:right;">Subtotal</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="linea : ${cotizacion.lineas}">
-                <td th:text="${linea.productoNombre}">Laptop XYZ</td>
-                <td th:text="${linea.cantidad}" style="text-align:right;">2</td>
-                <td th:text="${#numbers.formatCurrency(linea.precioUnitario)}" style="text-align:right;">$15,000.00</td>
-                <td th:text="${#numbers.formatCurrency(linea.subtotal)}" style="text-align:right;">$30,000.00</td>
-            </tr>
-            </tbody>
-        </table>
-        <div class="total-section">
-            <table>
-                <tr>
-                    <td><strong>Total:</strong></td>
-                    <td style="text-align:right;"><strong th:text="${#numbers.formatCurrency(cotizacion.total)}">$30,000.00</strong></td>
-                </tr>
-            </table>
-        </div>
-    </div>
-
 </div>
+
+<!-- Tabla de Conceptos/Productos -->
+<table>
+    <thead>
+    <tr>
+        <th th:text="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)} ? 'Concepto' : 'Producto'"></th>
+        <th class="text-right">Cantidad</th>
+        <th>Unidad</th>
+        <th class="text-right">Precio Unit.</th>
+        <th class="text-right">Subtotal</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="linea : ${cotizacion.lineas}">
+        <td th:text="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)} ? ${linea.concepto} : ${linea.productoNombre}"></td>
+        <td class="text-right" th:text="${#numbers.formatDecimal(linea.cantidad, 1, 'COMMA', 2, 'POINT')}"></td>
+        <td th:text="${linea.unidad}"></td>
+        <td class="text-right" th:text="${#numbers.formatCurrency(linea.precioUnitario)}"></td>
+        <td class="text-right" th:text="${#numbers.formatCurrency(linea.subtotal)}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="totals-section">
+    <table>
+        <tr>
+            <td>Subtotal:</td>
+            <td class="text-right" th:text="${#numbers.formatCurrency(subtotal)}"></td>
+        </tr>
+        <tr>
+            <td>IVA (16%):</td>
+            <td class="text-right" th:text="${#numbers.formatCurrency(iva)}"></td>
+        </tr>
+        <tr class="total-row">
+            <td>TOTAL:</td>
+            <td class="text-right" th:text="${#numbers.formatCurrency(totalConIva)}"></td>
+        </tr>
+    </table>
+</div>
+
+<div class="footer">
+    <p th:text="${cotizacion.vendedor.nombreEmpresa} + ' - ' + ${cotizacion.vendedor.sitioWeb}"></p>
+    <p>Gracias por su preferencia.</p>
+</div>
+
 </body>
 </html>

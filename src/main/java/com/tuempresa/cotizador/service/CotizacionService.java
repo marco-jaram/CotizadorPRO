@@ -5,19 +5,21 @@ import com.tuempresa.cotizador.web.dto.CotizacionProductosDTO;
 import com.tuempresa.cotizador.web.dto.CotizacionServiciosCreateDTO;
 import com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO;
 
+import java.util.List;
+
 public interface CotizacionService {
 
+    // --- MÉTODOS DE CREACIÓN ---
     CotizacionServiciosDTO crearCotizacionServicios(CotizacionServiciosCreateDTO dto);
-
     CotizacionProductosDTO crearCotizacionProductos(CotizacionProductosCreateDTO dto);
-    /**
-     * Busca una cotización por su ID y la devuelve como DTO.
-     * El objeto devuelto puede ser un CotizacionServiciosDTO o un CotizacionProductosDTO.
-     * @param id El ID de la cotización a buscar.
-     * @return Un DTO de la cotización encontrada.
-     */
+
+    // --- MÉTODOS DE ACTUALIZACIÓN (EDICIÓN) ---
+    CotizacionServiciosDTO actualizarCotizacionServicios(Long id, CotizacionServiciosCreateDTO dto);
+    CotizacionProductosDTO actualizarCotizacionProductos(Long id, CotizacionProductosCreateDTO dto);
+
+    // --- MÉTODOS DE BÚSQUEDA ---
     Object findCotizacionById(Long id);
 
-    // Aquí podrían ir otros métodos como:
-    // void cambiarEstatus(Long id, EstatusCotizacion nuevoEstatus);
+    // AÑADIDO: Nuevo método para el listado
+    List<Object> findAllCotizaciones();
 }

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/header :: header}"></head>
+
+<body>
+<div class="container">
+<nav th:replace="~{fragments/common :: navbar}"></nav>
+
+<main class="container mt-4">
+    <!-- El contenido del formulario va aquí (es el mismo que ya tenías) -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="bi bi-building-fill-gear"></i> Configuración de Mi Empresa</h3>
+            <p class="text-muted">Estos datos se usarán como el "Vendedor" en todas las cotizaciones que generes.</p>
+        </div>
+        <div class="card-body">
+            <!-- Mensajes de éxito/error -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <form th:action="@{/empresas/mi-empresa}" th:object="${miEmpresa}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}" />
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="nombreEmpresa" class="form-label">Nombre de la Empresa</label><input type="text" class="form-control" id="nombreEmpresa" th:field="*{nombreEmpresa}" required></div>
+                    <div class="col-md-6 mb-3"><label for="nombreContacto" class="form-label">Nombre del Contacto</label><input type="text" class="form-control" id="nombreContacto" th:field="*{nombreContacto}" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="correo" class="form-label">Correo Electrónico</label><input type="email" class="form-control" id="correo" th:field="*{correo}" required></div>
+                    <div class="col-md-6 mb-3"><label for="telefono" class="form-label">Teléfono</label><input type="tel" class="form-control" id="telefono" th:field="*{telefono}"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="rfc" class="form-label">RFC</label><input type="text" class="form-control" id="rfc" th:field="*{rfc}"></div>
+                    <div class="col-md-6 mb-3"><label for="sitioWeb" class="form-label">Sitio Web</label><input type="url" class="form-control" id="sitioWeb" th:field="*{sitioWeb}" placeholder="https://www.ejemplo.com"></div>
+                </div>
+                <div class="mb-3"><label for="direccion" class="form-label">Dirección Fiscal</label><textarea class="form-control" id="direccion" th:field="*{direccion}" rows="3"></textarea></div>
+                <div class="mb-3">
+                    <label for="logoFile" class="form-label">Logo de la Empresa (PNG/JPG, máx. 3MB)</label>
+                    <input class="form-control" type="file" id="logoFile" name="logoFile" accept="image/png, image/jpeg">
+                    <div th:if="*{id != null and logo != null}" class="mt-2">
+                        <p class="mb-1">Logo actual:</p>
+                        <img th:src="@{/empresas/{id}/logo(id=*{id})}" alt="Logo actual" style="max-height: 100px; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
+                    </div>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save-fill"></i> Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+</div>
+</body>
+
+</html>

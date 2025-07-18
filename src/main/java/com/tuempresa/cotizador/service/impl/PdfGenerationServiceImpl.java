@@ -1,43 +1,60 @@
 package com.tuempresa.cotizador.service.impl;
 
+import com.tuempresa.cotizador.model.Empresa;
+import com.tuempresa.cotizador.repository.EmpresaRepository; // IMPORTAR
 import com.tuempresa.cotizador.service.CotizacionService;
 import com.tuempresa.cotizador.service.PdfGenerationService;
+import com.tuempresa.cotizador.web.dto.CotizacionProductosDTO;
+import com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.nio.file.Paths;
+import java.util.Base64; // IMPORTAR
+import java.math.BigDecimal; // IMPORTAR
 
 @Service
 @RequiredArgsConstructor
 public class PdfGenerationServiceImpl implements PdfGenerationService {
 
     private final CotizacionService cotizacionService;
-    private final TemplateEngine templateEngine; // Spring Boot inyecta el motor de Thymeleaf automáticamente
+    private final EmpresaRepository empresaRepository; // AÑADIR
+    private final TemplateEngine templateEngine;
 
     @Override
     public byte[] generarPdfCotizacion(Long cotizacionId) throws Exception {
-        // 1. Obtener los datos completos de la cotización como un DTO
         Object cotizacionDto = cotizacionService.findCotizacionById(cotizacionId);
 
-        // 2. Preparar el contexto de Thymeleaf con los datos que usará la plantilla
         Context context = new Context();
         context.setVariable("cotizacion", cotizacionDto);
-        // Aquí podrías añadir más variables, como la fecha actual, etc.
-        // context.setVariable("fechaImpresion", LocalDate.now());
 
-        // 3. Procesar la plantilla HTML (ubicada en templates/pdf/) a un String en memoria
+        // --- LÓGICA MEJORADA PARA EL LOGO Y TOTALES ---
+        String logoBase64 = getMiEmpresaLogoBase64();
+        context.setVariable("logoBase64", logoBase64);
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+        if (cotizacionDto instanceof CotizacionServiciosDTO) {
+            subtotal = ((CotizacionServiciosDTO) cotizacionDto).getTotal();
+        } else if (cotizacionDto instanceof CotizacionProductosDTO) {
+            subtotal = ((CotizacionProductosDTO) cotizacionDto).getTotal();
+        }
+
+        BigDecimal iva = subtotal.multiply(new BigDecimal("0.16")); // Asumiendo 16% de IVA
+        BigDecimal totalConIva = subtotal.add(iva);
+
+        context.setVariable("subtotal", subtotal);
+        context.setVariable("iva", iva);
+        context.setVariable("totalConIva", totalConIva);
+        // --- FIN DE LA LÓGICA MEJORADA ---
+
         String htmlContent = templateEngine.process("pdf/pdf_template_cotizacion", context);
 
-        // 4. Usar Flying Saucer para convertir el String HTML a un PDF en un arreglo de bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ITextRenderer renderer = new ITextRenderer();
 
-        // 5. Establecer la URL base para que Flying Saucer pueda encontrar recursos como CSS o imágenes
-        // Esto le dice que busque los recursos relativos a la carpeta /resources/templates/
         String baseUrl = Paths.get("src/main/resources/templates/").toUri().toURL().toString();
         renderer.setDocumentFromString(htmlContent, baseUrl);
 
@@ -46,5 +63,13 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         outputStream.close();
 
         return outputStream.toByteArray();
+    }
+
+    private String getMiEmpresaLogoBase64() {
+        // Busca "Mi Empresa" y convierte el logo a una cadena Base64 para el HTML
+        return empresaRepository.findByEsMiEmpresa(true)
+                .map(Empresa::getLogo)
+                .map(logoBytes -> "data:image/png;base64," + Base64.getEncoder().encodeToString(logoBytes))
+                .orElse(""); // Devuelve una cadena vacía si no hay logo
     }
 }

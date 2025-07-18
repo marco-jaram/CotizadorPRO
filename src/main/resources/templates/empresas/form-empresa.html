@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/header :: header}">
+    <title>Nuevo Cliente</title>
+</head>
+
+<body>
+<div class="container">
+<nav th:replace="~{fragments/common :: navbar}"></nav>
+
+<main class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="bi bi-person-plus-fill"></i> Crear Nuevo Cliente</h3>
+            <p class="text-muted">Ingresa los datos de la empresa que será tu cliente.</p>
+        </div>
+        <div class="card-body">
+            <!-- MODIFICADO: Se eliminó el atributo enctype="multipart/form-data" -->
+            <form th:action="@{/empresas}" th:object="${empresa}" method="post">
+                <input type="hidden" th:field="*{id}" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nombreEmpresa" class="form-label">Nombre de la Empresa</label>
+                        <input type="text" class="form-control" id="nombreEmpresa" th:field="*{nombreEmpresa}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nombreContacto" class="form-label">Nombre del Contacto</label>
+                        <input type="text" class="form-control" id="nombreContacto" th:field="*{nombreContacto}" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="correo" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="correo" th:field="*{correo}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="telefono" th:field="*{telefono}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="rfc" class="form-label">RFC</label>
+                        <input type="text" class="form-control" id="rfc" th:field="*{rfc}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="sitioWeb" class="form-label">Sitio Web</label>
+                        <input type="url" class="form-control" id="sitioWeb" th:field="*{sitioWeb}" placeholder="https://www.ejemplo.com">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="direccion" class="form-label">Dirección</label>
+                    <textarea class="form-control" id="direccion" th:field="*{direccion}" rows="3"></textarea>
+                </div>
+
+                <!-- ELIMINADO: El bloque completo para subir el logo ha sido removido. -->
+
+                <hr>
+
+                <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Guardar Cliente</button>
+                <a th:href="@{/empresas}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+</div>
+</body>
+</html>

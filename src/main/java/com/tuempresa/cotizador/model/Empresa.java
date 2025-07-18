@@ -23,6 +23,11 @@ public class Empresa {
     @Column(name = "logo", columnDefinition="BLOB")
     private byte[] logo;
 
+    @Column(name = "es_mi_empresa", nullable = false, columnDefinition = "boolean default false")
+    private boolean esMiEmpresa = false;
+
+
+
     @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DatoBancario> datosBancarios;
 }
