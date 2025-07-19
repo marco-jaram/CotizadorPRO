@@ -1,79 +1,123 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/header :: header}"></head>
+<head th:replace="~{fragments/header :: header}">
+    <title>Cotización de Servicios</title>
+</head>
 
 <body>
-<div class="container">
+<nav th:replace="~{fragments/common :: navbar}"></nav>
 
-
-<nav th:replace="~{fragments/common :: navbar}" ></nav>
-<div layout:fragment="content">
+<main class="container mt-4">
     <div class="card">
         <div class="card-header">
-            <h3><i class="bi bi-tools"></i> Nueva Cotización de Servicios</h3>
+            <!-- Título dinámico para creación/edición -->
+            <h3 th:if="${cotizacionId == null}"><i class="bi bi-tools"></i> Nueva Cotización de Servicios</h3>
+            <h3 th:unless="${cotizacionId == null}"><i class="bi bi-pencil-square"></i> Editar Cotización de Servicios</h3>
         </div>
         <div class="card-body">
-            <form th:action="@{/cotizaciones/servicios}" th:object="${cotizacion}" method="post">
+            <!-- Acción del formulario dinámica para creación/edición -->
+            <form th:action="${cotizacionId == null} ? @{/cotizaciones/servicios} : @{/cotizaciones/servicios/{id}(id=${cotizacionId})}" th:object="${cotizacion}" method="post">
+
                 <h4>Datos Generales</h4>
+
+                <!-- Fila 1: Cliente y Estatus -->
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="clienteId" class="form-label">Cliente</label>
-                        <select id="clienteId" name="clienteId" class="form-select" required>
+                        <select id="clienteId" class="form-select" required th:field="*{clienteId}">
                             <option value="">Seleccione un cliente...</option>
                             <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nombreEmpresa}"></option>
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label for="estatus" class="form-label">Estatus</label>
+                        <select id="estatus" class="form-select" th:field="*{estatus}" required>
+                            <option th:each="est : ${estatusDisponibles}" th:value="${est.name()}" th:text="${est.name()}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Fila 2: Vendedor y Vigencia -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
                         <label for="vendedor" class="form-label">Vendedor (Mi Empresa)</label>
                         <input type="text" class="form-control" id="vendedor" th:value="${vendedor.nombreEmpresa}" readonly disabled>
                     </div>
-                </div>
-                <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="vigencia" class="form-label">Vigencia</label>
-                        <input type="text" id="vigencia" name="vigencia" class="form-control" th:field="*{vigencia}" placeholder="Ej: 15 días">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="formaPago" class="form-label">Forma de Pago</label>
-                        <input type="text" id="formaPago" name="formaPago" class="form-control" th:field="*{formaPago}" placeholder="Ej: 50% Anticipo, 50% Contra-entrega">
+                        <input type="text" class="form-control" th:field="*{vigencia}" placeholder="Ej: 15 días">
                     </div>
                 </div>
 
                 <hr>
                 <h4>Conceptos del Servicio</h4>
                 <div id="lineas-container">
-                    <!-- Las líneas se añadirán aquí dinámicamente -->
+                    <!-- Líneas existentes para EDICIÓN se cargan aquí -->
+                    <div th:each="linea, iterStat : *{lineas}" class="row align-items-end mb-2 linea-item">
+                        <div class="col-md-4">
+                            <label class="form-label">Concepto</label>
+                            <input type="text" th:name="|lineas[${iterStat.index}].concepto|" class="form-control" required th:value="${linea.concepto}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" step="any" th:name="|lineas[${iterStat.index}].cantidad|" class="form-control" required th:value="${linea.cantidad}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Unidad</label>
+                            <input type="text" th:name="|lineas[${iterStat.index}].unidad|" class="form-control" required th:value="${linea.unidad}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Precio Unitario</label>
+                            <input type="number" step="0.01" th:name="|lineas[${iterStat.index}].precioUnitario|" class="form-control" required th:value="${linea.precioUnitario}">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger remove-linea"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
                 </div>
                 <button type="button" id="addLinea" class="btn btn-success mt-2"><i class="bi bi-plus-circle"></i> Añadir Concepto</button>
+
                 <hr>
                 <h4>Términos y Condiciones</h4>
                 <div class="mb-3">
                     <label for="descripcionGeneral" class="form-label">Descripción General del Servicio</label>
-                    <textarea id="descripcionGeneral" name="descripcionGeneral" th:field="*{descripcionGeneral}" class="form-control" rows="3"></textarea>
+                    <textarea id="descripcionGeneral" th:field="*{descripcionGeneral}" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="metodosAceptados" class="form-label">Métodos de Pago Aceptados</label>
-                        <input type="text" id="metodosAceptados" name="metodosAceptados" class="form-control" th:field="*{metodosAceptados}" placeholder="Ej: Transferencia, Tarjeta de Crédito">
+                        <label for="formaPago" class="form-label">Forma de Pago</label>
+                        <input type="text" id="formaPago" class="form-control" th:field="*{formaPago}" placeholder="Ej: 50% Anticipo, 50% Contra-entrega">
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label for="metodosAceptados" class="form-label">Métodos de Pago Aceptados</label>
+                        <input type="text" id="metodosAceptados" class="form-control" th:field="*{metodosAceptados}" placeholder="Ej: Transferencia, Tarjeta de Crédito">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label for="condicionesEntrega" class="form-label">Condiciones de Entrega</label>
-                        <input type="text" id="condicionesEntrega" name="condicionesEntrega" class="form-control" th:field="*{condicionesEntrega}" placeholder="Ej: Según calendario acordado">
+                        <input type="text" id="condicionesEntrega" class="form-control" th:field="*{condicionesEntrega}" placeholder="Ej: Según calendario acordado">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="tiempoRespuesta" class="form-label">Tiempo de Respuesta</label>
+                        <input type="text" id="tiempoRespuesta" class="form-control" th:field="*{tiempoRespuesta}" placeholder="Ej: 24 horas hábiles">
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Crear Cotización</button>
-                    <a th:href="@{/}" class="btn btn-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg" th:text="${cotizacionId == null} ? 'Crear Cotización' : 'Guardar Cambios'"></button>
+                    <a th:href="@{/cotizaciones}" class="btn btn-secondary btn-lg">Cancelar</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let lineaIndex = /*[[${cotizacion.lineas != null ? cotizacion.lineas.size() : 0}]]*/ 0;
+
         document.addEventListener('DOMContentLoaded', function () {
-            let lineaIndex = 0;
             const container = document.getElementById('lineas-container');
             const addButton = document.getElementById('addLinea');
 
@@ -113,11 +157,14 @@
                 }
             });
 
-            // Añadir una línea inicial
-            addLinea();
+            if (lineaIndex === 0) {
+                 addLinea();
+            }
         });
+        /*]]>*/
     </script>
-</div>
-</div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
 </body>
 </html>

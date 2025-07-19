@@ -17,6 +17,8 @@ public class CotizacionProductosDTO {
     private EmpresaDTO vendedor;
     private String formasPago;
     private String garantia;
+    private String condicionesEntrega;
+    private String politicaDevoluciones;
     private List<LineaCotizacionProductoDTO> lineas;
     private BigDecimal total;
 }

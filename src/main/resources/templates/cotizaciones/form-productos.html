@@ -21,6 +21,20 @@
                             <option value="">Seleccione un cliente...</option>
                             <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nombreEmpresa}"></option>
                         </select>
+                        <div class="col-md-6">
+                            <label for="estatus" class="form-label">Estatus</label>
+                            <select id="estatus" class="form-select" th:field="*{estatus}" required>
+                                <!-- La opción por defecto, seleccionada si el estatus es nulo (creación) -->
+                                <option th:if="${cotizacion.estatus == null}" value="BORRADOR" selected>BORRADOR</option>
+
+                                <!-- Itera sobre todos los estatus disponibles -->
+                                <option th:each="est : ${estatusDisponibles}"
+                                        th:value="${est.name()}"
+                                        th:text="${est.name()}"
+                                        th:selected="${cotizacion.estatus == est}">
+                                </option>
+                            </select>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label for="vendedor" class="form-label">Vendedor (Mi Empresa)</label>

@@ -2,7 +2,7 @@ package com.tuempresa.cotizador.web.controller;
 
 import com.tuempresa.cotizador.model.Empresa;
 import com.tuempresa.cotizador.model.Producto;
-import com.tuempresa.cotizador.repository.EmpresaRepository;
+import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
 import com.tuempresa.cotizador.repository.ProductoRepository;
 import com.tuempresa.cotizador.service.CotizacionService;
 import com.tuempresa.cotizador.service.EmpresaService;
@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/cotizaciones")
@@ -29,75 +30,58 @@ public class CotizacionController {
     private final ProductoRepository productoRepository;
     private final PdfGenerationService pdfGenerationService;
 
-
     @GetMapping("/servicios/nueva")
-    public String mostrarFormularioServicios(Model model, RedirectAttributes redirectAttributes) { // Añadir RedirectAttributes
-        // --- CORRECCIÓN: LÓGICA DE SELECCIÓN PARA COTIZACIÓN ---
-
-        // 1. Validar que "Mi Empresa" (el vendedor) exista.
+    public String mostrarFormularioServicios(Model model, RedirectAttributes redirectAttributes) {
         Optional<Empresa> vendedorOpt = empresaService.findMiEmpresa();
         if (vendedorOpt.isEmpty()) {
-            // Si no existe, redirigimos al formulario de configuración con un mensaje.
             redirectAttributes.addFlashAttribute("error", "¡Acción requerida! Debe configurar 'Mi Empresa' antes de poder crear una cotización.");
             return "redirect:/empresas/mi-empresa";
         }
         Empresa vendedor = vendedorOpt.get();
-
-
-        // 2. Los CLIENTES son todas las demás empresas.
         List<Empresa> listaDeClientes = empresaService.findClientes();
 
         model.addAttribute("cotizacion", new CotizacionServiciosCreateDTO());
         model.addAttribute("clientes", listaDeClientes);
-        model.addAttribute("vendedor", vendedor); // Ahora es un solo objeto, no una lista
+        model.addAttribute("vendedor", vendedor);
+        // --- AÑADIDO ---
+        model.addAttribute("estatusDisponibles", EstatusCotizacion.values()); // Pasa la lista de estatus a la vista
 
         return "cotizaciones/form-servicios";
     }
 
-
     @PostMapping("/servicios")
     public String crearCotizacionServicios(@ModelAttribute CotizacionServiciosCreateDTO dto) {
-        // Asignar el ID del vendedor automáticamente
         Empresa miEmpresa = empresaService.findMiEmpresa().orElseThrow(() -> new IllegalStateException("No se encontró 'Mi Empresa' al guardar."));
         dto.setVendedorId(miEmpresa.getId());
-
         CotizacionServiciosDTO nuevaCotizacion = cotizacionService.crearCotizacionServicios(dto);
         return "redirect:/cotizaciones/" + nuevaCotizacion.getId();
     }
 
     @GetMapping("/productos/nueva")
-    public String mostrarFormularioProductos(Model model, RedirectAttributes redirectAttributes) { // Añadir RedirectAttributes
-        // --- CORRECCIÓN: LÓGICA DE SELECCIÓN (IDÉNTICA A LA DE SERVICIOS) ---
-
-        // 1. Validar que "Mi Empresa" (el vendedor) exista.
+    public String mostrarFormularioProductos(Model model, RedirectAttributes redirectAttributes) {
         Optional<Empresa> vendedorOpt = empresaService.findMiEmpresa();
         if (vendedorOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "¡Acción requerida! Debe configurar 'Mi Empresa' antes de poder crear una cotización.");
             return "redirect:/empresas/mi-empresa";
         }
         Empresa vendedor = vendedorOpt.get();
-
-
-        // 2. Los CLIENTES son todas las demás empresas.
         List<Empresa> listaDeClientes = empresaService.findClientes();
-
-        // 3. Obtenemos todos los productos disponibles.
         List<Producto> productos = productoRepository.findAll();
 
         model.addAttribute("cotizacion", new CotizacionProductosCreateDTO());
         model.addAttribute("clientes", listaDeClientes);
-        model.addAttribute("vendedor", vendedor); // Ahora es un solo objeto, no una lista
+        model.addAttribute("vendedor", vendedor);
         model.addAttribute("productos", productos);
+        // --- AÑADIDO ---
+        model.addAttribute("estatusDisponibles", EstatusCotizacion.values()); // Pasa la lista de estatus a la vista
 
         return "cotizaciones/form-productos";
     }
 
     @PostMapping("/productos")
     public String crearCotizacionProductos(@ModelAttribute CotizacionProductosCreateDTO dto) {
-        // Asignar el ID del vendedor automáticamente
         Empresa miEmpresa = empresaService.findMiEmpresa().orElseThrow(() -> new IllegalStateException("No se encontró 'Mi Empresa' al guardar."));
         dto.setVendedorId(miEmpresa.getId());
-
         CotizacionProductosDTO nuevaCotizacion = cotizacionService.crearCotizacionProductos(dto);
         return "redirect:/cotizaciones/" + nuevaCotizacion.getId();
     }
@@ -105,10 +89,8 @@ public class CotizacionController {
     @GetMapping("/{id}")
     public String verDetalleCotizacion(@PathVariable Long id, Model model) {
         Object cotizacionDto = cotizacionService.findCotizacionById(id);
-
         model.addAttribute("cotizacion", cotizacionDto);
-
-        return "cotizaciones/detalle"; // Vista genérica de detalle
+        return "cotizaciones/detalle";
     }
 
     @GetMapping("/{id}/pdf")
@@ -131,5 +113,92 @@ public class CotizacionController {
         List<Object> cotizaciones = cotizacionService.findAllCotizaciones();
         model.addAttribute("cotizaciones", cotizaciones);
         return "cotizaciones/lista-cotizaciones";
+    }
+    private void addCommonAttributesToModel(Model model, Empresa vendedor) {
+        model.addAttribute("vendedor", vendedor);
+        model.addAttribute("clientes", empresaService.findClientes());
+        model.addAttribute("estatusDisponibles", EstatusCotizacion.values());
+    }
+    // ... (dentro de la clase CotizacionController)
+
+    @GetMapping("/{id}/editar")
+    public String mostrarFormularioEdicion(@PathVariable Long id, Model model) {
+        Object cotizacionDto = cotizacionService.findCotizacionById(id);
+
+        if (cotizacionDto instanceof CotizacionServiciosDTO) {
+            CotizacionServiciosDTO dto = (CotizacionServiciosDTO) cotizacionDto;
+            Long vendedorId = dto.getVendedor().getId();
+            Empresa vendedor = empresaService.findById(vendedorId)
+                    .orElseThrow(() -> new IllegalStateException("El vendedor de la cotización no fue encontrado."));
+            addCommonAttributesToModel(model, vendedor);
+
+            CotizacionServiciosCreateDTO createDto = new CotizacionServiciosCreateDTO();
+            createDto.setClienteId(dto.getCliente().getId());
+            createDto.setVendedorId(dto.getVendedor().getId());
+            createDto.setEstatus(dto.getEstatus());
+            createDto.setVigencia(dto.getVigencia());
+            createDto.setFormaPago(dto.getFormaPago());
+            createDto.setDescripcionGeneral(dto.getDescripcionGeneral());
+            createDto.setMetodosAceptados(dto.getMetodosAceptados());
+            createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
+            createDto.setTiempoRespuesta(dto.getTiempoRespuesta());
+            createDto.setLineas(dto.getLineas().stream().map(l -> {
+                LineaCotizacionServicioCreateDTO linea = new LineaCotizacionServicioCreateDTO();
+                linea.setConcepto(l.getConcepto());
+                linea.setCantidad(l.getCantidad());
+                linea.setUnidad(l.getUnidad());
+                linea.setPrecioUnitario(l.getPrecioUnitario());
+                return linea;
+            }).collect(Collectors.toList()));
+
+            model.addAttribute("cotizacion", createDto);
+            model.addAttribute("cotizacionId", id);
+
+            return "cotizaciones/form-servicios";
+
+        } else if (cotizacionDto instanceof CotizacionProductosDTO) {
+            CotizacionProductosDTO dto = (CotizacionProductosDTO) cotizacionDto;
+            Long vendedorId = dto.getVendedor().getId();
+            Empresa vendedor = empresaService.findById(vendedorId)
+                    .orElseThrow(() -> new IllegalStateException("El vendedor de la cotización no fue encontrado."));
+            addCommonAttributesToModel(model, vendedor);
+            CotizacionProductosCreateDTO createDto = new CotizacionProductosCreateDTO();
+            createDto.setClienteId(dto.getCliente().getId());
+            createDto.setVendedorId(dto.getVendedor().getId());
+            createDto.setEstatus(dto.getEstatus());
+            createDto.setVigencia(dto.getVigencia());
+            createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
+            createDto.setGarantia(dto.getGarantia());
+            createDto.setPoliticaDevoluciones(dto.getPoliticaDevoluciones());
+            createDto.setFormasPago(dto.getFormasPago());
+            createDto.setLineas(dto.getLineas().stream().map(l -> {
+                LineaCotizacionProductoCreateDTO linea = new LineaCotizacionProductoCreateDTO();
+                linea.setProductoId(l.getProductoId());
+                linea.setCantidad(l.getCantidad());
+                linea.setUnidad(l.getUnidad());
+                linea.setPrecioUnitario(l.getPrecioUnitario());
+                return linea;
+            }).collect(Collectors.toList()));
+
+            model.addAttribute("cotizacion", createDto);
+            model.addAttribute("cotizacionId", id);
+            model.addAttribute("productos", productoRepository.findAll());
+
+            return "cotizaciones/form-productos";
+        }
+
+        return "redirect:/";
+    }
+
+    @PostMapping("/servicios/{id}")
+    public String actualizarCotizacionServicios(@PathVariable Long id, @ModelAttribute CotizacionServiciosCreateDTO dto) {
+        cotizacionService.actualizarCotizacionServicios(id, dto);
+        return "redirect:/cotizaciones/" + id;
+    }
+
+    @PostMapping("/productos/{id}")
+    public String actualizarCotizacionProductos(@PathVariable Long id, @ModelAttribute CotizacionProductosCreateDTO dto) {
+        cotizacionService.actualizarCotizacionProductos(id, dto);
+        return "redirect:/cotizaciones/" + id;
     }
 }

@@ -6,14 +6,9 @@
 </head>
 
 <body>
-<div class="container">
-
-
 <nav th:replace="~{fragments/common :: navbar}"></nav>
 
 <main class="container mt-4">
-
-    <!-- Botones de Acción -->
     <div class="d-flex justify-content-end mb-3 gap-2">
         <a th:href="@{/cotizaciones/{id}/editar(id=${cotizacion.id})}" class="btn btn-warning"><i class="bi bi-pencil-fill"></i> Editar</a>
         <a th:href="@{/cotizaciones/{id}/pdf(id=${cotizacion.id})}" class="btn btn-danger" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF</a>
@@ -21,44 +16,47 @@
 
     <div class="card">
         <div class="card-header bg-dark text-white">
-            <div class="d-flex justify-content-between">
-                <span>Folio: <strong th:text="${cotizacion.folio}">COT-12345</strong></span>
-                <span>Fecha de Emisión: <strong th:text="${#temporals.format(cotizacion.fechaEmision, 'dd/MM/yyyy')}">01/01/2024</strong></span>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fs-5">Folio: <strong th:text="${cotizacion.folio}">COT-12345</strong></span>
+                </div>
+                <div>
+                    <span class="badge fs-6" th:classappend="${cotizacion.estatus.name() == 'APROBADA' ? 'bg-success' : (cotizacion.estatus.name() == 'RECHAZADA' ? 'bg-danger' : (cotizacion.estatus.name() == 'ENVIADA' ? 'bg-info' : 'bg-secondary'))}" th:text="${cotizacion.estatus.name()}">BORRADOR</span>
+                </div>
             </div>
         </div>
         <div class="card-body">
-            <div class="row mb-4">
-                <!-- Datos del Vendedor -->
+            <!-- SECCIÓN DE DATOS GENERALES -->
+            <div class="row mb-4 p-3 bg-light border rounded">
                 <div class="col-md-6">
-                    <h5>De:</h5>
-                    <ul class="list-unstyled">
+                    <h5><i class="bi bi-building"></i> Vendedor (Mi Empresa)</h5>
+                    <ul class="list-unstyled mb-0">
                         <li><strong>Empresa:</strong> <span th:text="${cotizacion.vendedor.nombreEmpresa}"></span></li>
                         <li><strong>Contacto:</strong> <span th:text="${cotizacion.vendedor.nombreContacto}"></span></li>
                         <li><strong>Correo:</strong> <span th:text="${cotizacion.vendedor.correo}"></span></li>
                     </ul>
                 </div>
-                <!-- Datos del Cliente -->
                 <div class="col-md-6">
-                    <h5>Para:</h5>
-                    <ul class="list-unstyled">
+                    <h5><i class="bi bi-person-circle"></i> Cliente</h5>
+                    <ul class="list-unstyled mb-0">
                         <li><strong>Empresa:</strong> <span th:text="${cotizacion.cliente.nombreEmpresa}"></span></li>
                         <li><strong>Contacto:</strong> <span th:text="${cotizacion.cliente.nombreContacto}"></span></li>
                         <li><strong>Correo:</strong> <span th:text="${cotizacion.cliente.correo}"></span></li>
                     </ul>
                 </div>
+                <div class="col-12 mt-3">
+                    <p class="mb-1"><strong>Fecha de Emisión:</strong> <span th:text="${#temporals.format(cotizacion.fechaEmision, 'dd/MM/yyyy')}"></span></p>
+                    <p class="mb-0"><strong>Vigencia:</strong> <span th:text="${cotizacion.vigencia}"></span></p>
+                </div>
             </div>
 
-            <!-- SECCIÓN DE SERVICIOS -->
-            <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
-                <h4 class="mb-3">Conceptos de Servicio</h4>
+            <!-- SECCIÓN DE LÍNEAS DE COTIZACIÓN -->
+            <h4 class="mb-3">Detalle de la Cotización</h4>
+            <div class="table-responsive" th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
                 <table class="table table-bordered table-striped">
                     <thead class="table-light">
                     <tr>
-                        <th>Concepto</th>
-                        <th class="text-end">Cantidad</th>
-                        <th>Unidad</th>
-                        <th class="text-end">Precio Unitario</th>
-                        <th class="text-end">Subtotal</th>
+                        <th>Concepto</th><th class="text-end">Cantidad</th><th>Unidad</th><th class="text-end">Precio Unitario</th><th class="text-end">Subtotal</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -71,50 +69,61 @@
                     </tr>
                     </tbody>
                     <tfoot>
-                    <tr>
-                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                        <td class="text-end"><strong><span th:text="|${#numbers.formatCurrency(cotizacion.total)}|"></span></strong></td>
+                    <tr class="fw-bold">
+                        <td colspan="4" class="text-end">Total:</td>
+                        <td class="text-end"><span th:text="|${#numbers.formatCurrency(cotizacion.total)}|"></span></td>
                     </tr>
                     </tfoot>
                 </table>
+            </div>
+            <div class="table-responsive" th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
+                <!-- ... tabla para productos ... -->
             </div>
 
-            <!-- SECCIÓN DE PRODUCTOS -->
-            <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
-                <h4 class="mb-3">Productos Cotizados</h4>
-                <table class="table table-bordered table-striped">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Producto</th>
-                        <th class="text-end">Cantidad</th>
-                        <th>Unidad</th>
-                        <th class="text-end">Precio Unitario</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="linea : ${cotizacion.lineas}">
-                        <td th:text="${linea.productoNombre}"></td>
-                        <td class="text-end" th:text="${linea.cantidad}"></td>
-                        <td th:text="${linea.unidad}"></td>
-                        <td class="text-end" th:text="|${#numbers.formatCurrency(linea.precioUnitario)}|"></td>
-                        <td class="text-end" th:text="|${#numbers.formatCurrency(linea.subtotal)}|"></td>
-                    </tr>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                        <td class="text-end"><strong><span th:text="|${#numbers.formatCurrency(cotizacion.total)}|"></span></strong></td>
-                    </tr>
-                    </tfoot>
-                </table>
+            <!-- **** INICIO DE LA CORRECCIÓN DE DISEÑO **** -->
+            <hr class="my-4">
+            <h4>Términos y Condiciones</h4>
+
+            <!-- PARA SERVICIOS -->
+            <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
+                <p class="mb-2"><strong>Descripción General:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.descripcionGeneral}"></span>
+                </p>
+                <p class="mb-2"><strong>Forma de Pago:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.formaPago}"></span>
+                </p>
+                <p class="mb-2"><strong>Métodos Aceptados:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.metodosAceptados}"></span>
+                </p>
+                <p class="mb-2"><strong>Condiciones de Entrega:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.condicionesEntrega}"></span>
+                </p>
+                <p class="mb-2"><strong>Tiempo de Respuesta:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.tiempoRespuesta}"></span>
+                </p>
             </div>
+
+            <!-- PARA PRODUCTOS -->
+            <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
+                <p class="mb-2"><strong>Formas de Pago:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.formasPago}"></span>
+                </p>
+                <p class="mb-2"><strong>Condiciones de Entrega:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.condicionesEntrega}"></span>
+                </p>
+                <p class="mb-2"><strong>Garantía:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.garantia}"></span>
+                </p>
+                <p class="mb-2"><strong>Política de Devoluciones:</strong><br/>
+                    <span class="ps-3" th:text="${cotizacion.politicaDevoluciones}"></span>
+                </p>
+            </div>
+            <!-- **** FIN DE LA CORRECCIÓN DE DISEÑO **** -->
         </div>
     </div>
 </main>
 
 <footer th:replace="~{fragments/common :: footer}"></footer>
-</div>
 </body>
 
 </html>

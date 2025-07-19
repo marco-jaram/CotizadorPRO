@@ -1,5 +1,6 @@
 package com.tuempresa.cotizador.web.dto;
 
+import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
 import lombok.Data;
 import java.util.List;
 
@@ -7,6 +8,7 @@ import java.util.List;
 public class CotizacionServiciosCreateDTO {
     private Long clienteId;
     private Long vendedorId;
+    private EstatusCotizacion estatus;
     private String vigencia;
     private String descripcionGeneral;
     private String formaPago;
