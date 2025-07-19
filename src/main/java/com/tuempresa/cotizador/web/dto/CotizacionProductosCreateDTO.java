@@ -2,6 +2,8 @@ package com.tuempresa.cotizador.web.dto;
 
 import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -14,5 +16,7 @@ public class CotizacionProductosCreateDTO {
     private String garantia;
     private String politicaDevoluciones;
     private String formasPago;
+    private boolean aplicarIva;
+    private BigDecimal porcentajeIva;
     private List<LineaCotizacionProductoCreateDTO> lineas;
 }

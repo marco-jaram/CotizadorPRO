@@ -4,6 +4,8 @@ package com.tuempresa.cotizador.model;
 import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -23,6 +25,13 @@ public abstract class Cotizacion {
 
     @Enumerated(EnumType.STRING)
     private EstatusCotizacion estatus;
+
+    @Column(name = "aplicar_iva")
+    private boolean aplicarIva = true;
+
+    @Column(name = "porcentaje_iva")
+    private BigDecimal porcentajeIva = new BigDecimal("0.16");
+
 
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)

@@ -20,6 +20,9 @@ public class CotizacionServiciosDTO {
     private String metodosAceptados;
     private String condicionesEntrega;
     private String tiempoRespuesta;
+    private boolean aplicarIva;
+    private BigDecimal porcentajeIva;
     private List<LineaCotizacionServicioDTO> lineas;
     private BigDecimal total;
+
 }

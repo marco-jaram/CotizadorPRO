@@ -52,6 +52,8 @@
 
             <!-- SECCIÓN DE LÍNEAS DE COTIZACIÓN -->
             <h4 class="mb-3">Detalle de la Cotización</h4>
+
+            <!-- TABLA PARA SERVICIOS -->
             <div class="table-responsive" th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
                 <table class="table table-bordered table-striped">
                     <thead class="table-light">
@@ -68,19 +70,76 @@
                         <td class="text-end" th:text="|${#numbers.formatCurrency(linea.subtotal)}|"></td>
                     </tr>
                     </tbody>
+                    <!-- UN ÚNICO FOOTER CON LA SINTAXIS CORRECTA -->
                     <tfoot>
                     <tr class="fw-bold">
-                        <td colspan="4" class="text-end">Total:</td>
-                        <td class="text-end"><span th:text="|${#numbers.formatCurrency(cotizacion.total)}|"></span></td>
+                        <td colspan="4" class="text-end border-0">Subtotal:</td>
+                        <td class="text-end" th:with="subtotal=${#aggregates.sum(cotizacion.lineas.![subtotal])}">
+                            <span th:text="|${#numbers.formatCurrency(subtotal)}|"></span>
+                        </td>
+                    </tr>
+                    <tr class="fw-bold" th:if="${cotizacion.aplicarIva}">
+                        <td colspan="4" class="text-end border-0">
+                            IVA (<span th:text="${#numbers.formatPercent(cotizacion.porcentajeIva, 1, 0)}"></span>):
+                        </td>
+                        <td class="text-end" th:with="subtotal=${#aggregates.sum(cotizacion.lineas.![subtotal])}, iva=${subtotal.multiply(cotizacion.porcentajeIva)}">
+                            <span th:text="|${#numbers.formatCurrency(iva)}|"></span>
+                        </td>
+                    </tr>
+                    <tr class="fw-bold fs-5 table-group-divider">
+                        <td colspan="4" class="text-end border-0">Total:</td>
+                        <td class="text-end">
+                            <span th:text="|${#numbers.formatCurrency(cotizacion.total)}|"></span>
+                        </td>
                     </tr>
                     </tfoot>
                 </table>
             </div>
+
+            <!-- TABLA PARA PRODUCTOS -->
             <div class="table-responsive" th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
-                <!-- ... tabla para productos ... -->
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Producto</th><th class="text-end">Cantidad</th><th>Unidad</th><th class="text-end">Precio Unitario</th><th class="text-end">Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="linea : ${cotizacion.lineas}">
+                        <td th:text="${linea.productoNombre}"></td>
+                        <td class="text-end" th:text="${linea.cantidad}"></td>
+                        <td th:text="${linea.unidad}"></td>
+                        <td class="text-end" th:text="|${#numbers.formatCurrency(linea.precioUnitario)}|"></td>
+                        <td class="text-end" th:text="|${#numbers.formatCurrency(linea.subtotal)}|"></td>
+                    </tr>
+                    </tbody>
+                    <!-- UN ÚNICO FOOTER CON LA SINTAXIS CORRECTA -->
+                    <tfoot>
+                    <tr class="fw-bold">
+                        <td colspan="4" class="text-end border-0">Subtotal:</td>
+                        <td class="text-end" th:with="subtotal=${#aggregates.sum(cotizacion.lineas.![subtotal])}">
+                            <span th:text="|${#numbers.formatCurrency(subtotal)}|"></span>
+                        </td>
+                    </tr>
+                    <tr class="fw-bold" th:if="${cotizacion.aplicarIva}">
+                        <td colspan="4" class="text-end border-0">
+                            IVA (<span th:text="${#numbers.formatPercent(cotizacion.porcentajeIva, 1, 0)}"></span>):
+                        </td>
+                        <td class="text-end" th:with="subtotal=${#aggregates.sum(cotizacion.lineas.![subtotal])}, iva=${subtotal.multiply(cotizacion.porcentajeIva)}">
+                            <span th:text="|${#numbers.formatCurrency(iva)}|"></span>
+                        </td>
+                    </tr>
+                    <tr class="fw-bold fs-5 table-group-divider">
+                        <td colspan="4" class="text-end border-0">Total:</td>
+                        <td class="text-end">
+                            <span th:text="|${#numbers.formatCurrency(cotizacion.total)}|"></span>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </table>
             </div>
 
-            <!-- **** INICIO DE LA CORRECCIÓN DE DISEÑO **** -->
+            <!-- SECCIÓN DE TÉRMINOS Y CONDICIONES -->
             <hr class="my-4">
             <h4>Términos y Condiciones</h4>
 
@@ -118,7 +177,6 @@
                     <span class="ps-3" th:text="${cotizacion.politicaDevoluciones}"></span>
                 </p>
             </div>
-            <!-- **** FIN DE LA CORRECCIÓN DE DISEÑO **** -->
         </div>
     </div>
 </main>

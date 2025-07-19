@@ -19,6 +19,8 @@ public class CotizacionProductosDTO {
     private String garantia;
     private String condicionesEntrega;
     private String politicaDevoluciones;
+    private boolean aplicarIva;
+    private BigDecimal porcentajeIva;
     private List<LineaCotizacionProductoDTO> lineas;
     private BigDecimal total;
 }

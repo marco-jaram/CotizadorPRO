@@ -46,6 +46,27 @@
                         <label for="vigencia" class="form-label">Vigencia</label>
                         <input type="text" id="vigencia" name="vigencia" class="form-control" th:field="*{vigencia}" placeholder="Ej: 30 días o hasta agotar existencias">
                     </div>
+                    <!-- **** INICIO DE LA SECCIÓN DE IVA **** -->
+                    <hr>
+                    <h4>Impuestos</h4>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="aplicarIva" th:field="*{aplicarIva}">
+                                <label class="form-check-label" for="aplicarIva">Aplicar IVA</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="porcentaje-iva-container">
+                            <label for="porcentajeIvaDisplay" class="form-label">Porcentaje IVA (%)</label>
+                            <div class="input-group">
+                                <input type="number" step="1" min="0" max="100" class="form-control" id="porcentajeIvaDisplay">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="form-text text-muted">Ej: 16 para 16%, 8 para 8%.</small>
+                            <input type="hidden" id="porcentajeIva" th:field="*{porcentajeIva}">
+                        </div>
+                    </div>
+                    <!-- **** FIN DE LA SECCIÓN DE IVA **** -->
                     <div class="col-md-6">
                         <label for="formasPago" class="form-label">Formas de Pago</label>
                         <input type="text" id="formasPago" name="formasPago" class="form-control" th:field="*{formasPago}" placeholder="Ej: Contado, Crédito 30 días">
@@ -138,6 +159,73 @@
 
             // Añadir una línea inicial
             addLinea();
+        });
+    </script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            // Script para añadir/quitar líneas de productos
+            let lineaIndex = /*[[${cotizacion.lineas != null ? cotizacion.lineas.size() : 0}]]*/ 0;
+            const container = document.getElementById('lineas-container');
+            const addButton = document.getElementById('addLinea');
+            const template = document.getElementById('producto-linea-template');
+
+            function addLinea() {
+                const cloneHtml = template.innerHTML.replace(/__INDEX__/g, lineaIndex);
+                const div = document.createElement('div');
+                div.innerHTML = cloneHtml;
+                while (div.firstChild) {
+                    container.appendChild(div.firstChild);
+                }
+                lineaIndex++;
+            }
+
+            addButton.addEventListener('click', addLinea);
+            container.addEventListener('click', function (e) {
+                if (e.target.closest('.remove-linea')) {
+                    e.target.closest('.linea-item').remove();
+                }
+            });
+            if (lineaIndex === 0) {
+                 addLinea();
+            }
+
+            // Script para manejar el IVA (idéntico al de servicios)
+            const aplicarIvaCheckbox = document.getElementById('aplicarIva');
+            const porcentajeContainer = document.getElementById('porcentaje-iva-container');
+            const porcentajeDisplayInput = document.getElementById('porcentajeIvaDisplay');
+            const porcentajeHiddenInput = document.getElementById('porcentajeIva');
+            const form = document.getElementById('cotizacionForm');
+
+            function initDisplayValue() {
+                const decimalValue = parseFloat(porcentajeHiddenInput.value);
+                if (!isNaN(decimalValue)) {
+                    porcentajeDisplayInput.value = (decimalValue * 100).toFixed(0);
+                } else {
+                    porcentajeDisplayInput.value = 16;
+                }
+            }
+
+            function togglePorcentajeVisibility() {
+                porcentajeContainer.style.display = aplicarIvaCheckbox.checked ? 'block' : 'none';
+            }
+
+            porcentajeDisplayInput.addEventListener('input', function() {
+                const percentageValue = parseFloat(this.value);
+                if (!isNaN(percentageValue)) {
+                    porcentajeHiddenInput.value = percentageValue / 100;
+                }
+            });
+
+            form.addEventListener('submit', function() {
+                const percentageValue = parseFloat(porcentajeDisplayInput.value);
+                if (!isNaN(percentageValue)) {
+                    porcentajeHiddenInput.value = percentageValue / 100;
+                }
+            });
+
+            aplicarIvaCheckbox.addEventListener('change', togglePorcentajeVisibility);
+            initDisplayValue();
+            togglePorcentajeVisibility();
         });
     </script>
 </div>

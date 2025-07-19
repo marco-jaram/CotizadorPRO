@@ -1,0 +1,33 @@
+2025-07-19 12:20:22.810983-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 12:20:38.445342-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 12:23:17.976204-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 12:24:57.075746-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 12:28:43.054619-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 12:31:31.237838-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 12:32:04.734391-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 13:00:59.929049-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 13:07:10.080872-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 13:18:37.185643-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]
+2025-07-19 13:20:18.851465-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) [*]default 0.1600"; SQL statement:
+alter table if exists cotizacion alter column porcentaje_iva set data type decimal(5,4) default 0.1600 [42000-232]

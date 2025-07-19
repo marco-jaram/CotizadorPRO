@@ -105,6 +105,8 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setMetodosAceptados(dto.getMetodosAceptados());
         cotizacion.setCondicionesEntrega(dto.getCondicionesEntrega());
         cotizacion.setTiempoRespuesta(dto.getTiempoRespuesta());
+        cotizacion.setAplicarIva(dto.isAplicarIva());
+        cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
         cotizacion.getLineas().clear();
         List<LineaCotizacionServicio> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
@@ -134,6 +136,8 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setGarantia(dto.getGarantia());
         cotizacion.setPoliticaDevoluciones(dto.getPoliticaDevoluciones());
         cotizacion.setFormasPago(dto.getFormasPago());
+        cotizacion.setAplicarIva(dto.isAplicarIva());
+        cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
         cotizacion.getLineas().clear();
         List<LineaCotizacionProducto> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
@@ -207,6 +211,9 @@ public class CotizacionServiceImpl implements CotizacionService {
         dto.setMetodosAceptados(cotizacion.getMetodosAceptados());
         dto.setCondicionesEntrega(cotizacion.getCondicionesEntrega());
         dto.setTiempoRespuesta(cotizacion.getTiempoRespuesta());
+        dto.setAplicarIva(cotizacion.isAplicarIva());
+        dto.setPorcentajeIva(cotizacion.getPorcentajeIva());
+
 
         if (cotizacion.getLineas() != null) {
             List<LineaCotizacionServicioDTO> lineasDTO = cotizacion.getLineas().stream().map(linea -> {
@@ -220,7 +227,21 @@ public class CotizacionServiceImpl implements CotizacionService {
                 return lineaDTO;
             }).collect(Collectors.toList());
             dto.setLineas(lineasDTO);
-            dto.setTotal(lineasDTO.stream().map(LineaCotizacionServicioDTO::getSubtotal).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add));
+
+            // **** INICIO DE LA CORRECCIÓN DE CÁLCULO ****
+            BigDecimal subtotal = lineasDTO.stream()
+                    .map(LineaCotizacionServicioDTO::getSubtotal)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            if (cotizacion.isAplicarIva()) {
+                BigDecimal iva = subtotal.multiply(cotizacion.getPorcentajeIva());
+                dto.setTotal(subtotal.add(iva));
+            } else {
+                dto.setTotal(subtotal);
+            }
+            // **** FIN DE LA CORRECCIÓN DE CÁLCULO ****
+
         }
         return dto;
     }
@@ -238,6 +259,8 @@ public class CotizacionServiceImpl implements CotizacionService {
         dto.setGarantia(cotizacion.getGarantia());
         dto.setCondicionesEntrega(cotizacion.getCondicionesEntrega());
         dto.setPoliticaDevoluciones(cotizacion.getPoliticaDevoluciones());
+        dto.setAplicarIva(cotizacion.isAplicarIva());
+        dto.setPorcentajeIva(cotizacion.getPorcentajeIva());
 
         if (cotizacion.getLineas() != null) {
             List<LineaCotizacionProductoDTO> lineasDTO = cotizacion.getLineas().stream().map(linea -> {
@@ -254,7 +277,20 @@ public class CotizacionServiceImpl implements CotizacionService {
                 return lineaDTO;
             }).collect(Collectors.toList());
             dto.setLineas(lineasDTO);
-            dto.setTotal(lineasDTO.stream().map(LineaCotizacionProductoDTO::getSubtotal).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add));
+
+            // **** INICIO DE LA CORRECCIÓN DE CÁLCULO ****
+            BigDecimal subtotal = lineasDTO.stream()
+                    .map(LineaCotizacionProductoDTO::getSubtotal)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            if (cotizacion.isAplicarIva()) {
+                BigDecimal iva = subtotal.multiply(cotizacion.getPorcentajeIva());
+                dto.setTotal(subtotal.add(iva));
+            } else {
+                dto.setTotal(subtotal);
+            }
+            // **** FIN DE LA CORRECCIÓN DE CÁLCULO ****
         }
         return dto;
     }
