@@ -58,7 +58,7 @@ public class EmpresaController {
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(empresa.getLogo());
     }
 
-    // (Opcional) Ejemplo de cómo sería el formulario para crear/editar una empresa
+
     @GetMapping("/nueva")
     public String mostrarFormularioNuevaEmpresa(Model model) {
         model.addAttribute("empresa", new Empresa());
