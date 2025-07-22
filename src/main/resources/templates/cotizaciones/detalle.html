@@ -6,9 +6,10 @@
 </head>
 
 <body>
+<main class="container mt-4">
 <nav th:replace="~{fragments/common :: navbar}"></nav>
 
-<main class="container mt-4">
+
     <div class="d-flex justify-content-end mb-3 gap-2">
         <a th:href="@{/cotizaciones/{id}/editar(id=${cotizacion.id})}" class="btn btn-warning"><i class="bi bi-pencil-fill"></i> Editar</a>
         <a th:href="@{/cotizaciones/{id}/pdf(id=${cotizacion.id})}" class="btn btn-danger" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF</a>

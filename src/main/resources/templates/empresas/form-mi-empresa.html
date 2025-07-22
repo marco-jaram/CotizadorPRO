@@ -43,9 +43,15 @@
                 <div class="mb-3">
                     <label for="logoFile" class="form-label">Logo de la Empresa (PNG/JPG, máx. 3MB)</label>
                     <input class="form-control" type="file" id="logoFile" name="logoFile" accept="image/png, image/jpeg">
-                    <div th:if="*{id != null and logo != null}" class="mt-2">
-                        <p class="mb-1">Logo actual:</p>
-                        <img th:src="@{/empresas/{id}/logo(id=*{id})}" alt="Logo actual" style="max-height: 100px; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
+                    <div th:if="*{id != null and logo != null and logo.length > 0}" class="mt-2 p-3 border rounded bg-light">
+                        <p class="mb-1"><strong>Logo actual:</strong></p>
+                        <div class="d-flex align-items-center">
+                            <img th:src="@{/empresas/{id}/logo(id=*{id})}" alt="Logo actual" style="max-height: 80px; border: 1px solid #ddd; padding: 5px; border-radius: 4px; margin-right: 15px;">
+                            <!-- BOTÓN AÑADIDO -->
+                            <a th:href="@{/empresas/mi-empresa/eliminar-logo}" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar el logo actual?');">
+                                <i class="bi bi-trash-fill"></i> Eliminar Logo
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <hr>

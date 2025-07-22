@@ -9,5 +9,8 @@ public class EmpresaDTO {
     private String nombreContacto;
     private String correo;
     private String direccion;
+    private String telefono;
+    private String rfc;
+    private String sitioWeb;
     private boolean tieneLogo;
 }

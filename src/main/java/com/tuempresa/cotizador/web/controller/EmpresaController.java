@@ -11,6 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -45,7 +47,12 @@ public class EmpresaController {
         // Volvemos a cargar los datos por si acaso y redirigimos al mismo formulario.
         return mostrarFormularioMiEmpresa(model);
     }
-
+    @GetMapping("/mi-empresa/eliminar-logo")
+    public String eliminarLogoMiEmpresa(RedirectAttributes redirectAttributes) {
+        empresaService.eliminarLogoMiEmpresa();
+        redirectAttributes.addFlashAttribute("successMessage", "El logo ha sido eliminado correctamente.");
+        return "redirect:/empresas/mi-empresa";
+    }
     @GetMapping("/{id}/logo")
     public ResponseEntity<byte[]> getEmpresaLogo(@PathVariable Long id) {
         Empresa empresa = empresaService.findById(id)
@@ -77,4 +84,5 @@ public class EmpresaController {
         model.addAttribute("empresas", listaDeClientes);
         return "empresas/lista-empresas";
     }
+
 }

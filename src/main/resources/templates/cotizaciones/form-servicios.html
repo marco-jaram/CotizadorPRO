@@ -7,8 +7,7 @@
 
 <body>
 <main class="container mt-4">
-<nav th:replace="~{fragments/common :: navbar}"></nav>
-
+    <nav th:replace="~{fragments/common :: navbar}"></nav>
 
     <div class="card">
         <div class="card-header">
@@ -16,10 +15,10 @@
             <h3 th:unless="${cotizacionId == null}"><i class="bi bi-pencil-square"></i> Editar Cotización de Servicios</h3>
         </div>
         <div class="card-body">
-            <!-- **** CORRECCIÓN: AÑADIDO id="cotizacionForm" **** -->
             <form th:action="${cotizacionId == null} ? @{/cotizaciones/servicios} : @{/cotizaciones/servicios/{id}(id=${cotizacionId})}" th:object="${cotizacion}" method="post" id="cotizacionForm">
 
                 <h4>Datos Generales</h4>
+                <!-- Los datos generales ya usan th:field y están correctos -->
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="clienteId" class="form-label">Cliente</label>
@@ -48,6 +47,7 @@
 
                 <hr>
                 <h4>Impuestos</h4>
+                <!-- La sección de IVA ya usa th:field y está correcta -->
                 <div class="row mb-3 align-items-center">
                     <div class="col-md-6">
                         <div class="form-check form-switch">
@@ -61,7 +61,6 @@
                             <input type="number" step="1" min="0" max="100" class="form-control" id="porcentajeIvaDisplay">
                             <span class="input-group-text">%</span>
                         </div>
-                        <small class="form-text text-muted">Ej: 16 para 16%, 8 para 8%.</small>
                         <input type="hidden" id="porcentajeIva" th:field="*{porcentajeIva}">
                     </div>
                 </div>
@@ -69,22 +68,23 @@
                 <hr>
                 <h4>Conceptos del Servicio</h4>
                 <div id="lineas-container">
+                    <!-- CORRECCIÓN CLAVE: Se usa th:field para enlazar los datos de las líneas existentes -->
                     <div th:each="linea, iterStat : *{lineas}" class="row align-items-end mb-2 linea-item">
                         <div class="col-md-4">
                             <label class="form-label">Concepto</label>
-                            <input type="text" th:name="|lineas[${iterStat.index}].concepto|" class="form-control" required th:value="${linea.concepto}">
+                            <input type="text" class="form-control" required th:field="*{lineas[__${iterStat.index}__].concepto}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Cantidad</label>
-                            <input type="number" step="any" th:name="|lineas[${iterStat.index}].cantidad|" class="form-control" required th:value="${linea.cantidad}">
+                            <input type="number" step="any" class="form-control" required th:field="*{lineas[__${iterStat.index}__].cantidad}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Unidad</label>
-                            <input type="text" th:name="|lineas[${iterStat.index}].unidad|" class="form-control" required th:value="${linea.unidad}">
+                            <input type="text" class="form-control" required th:field="*{lineas[__${iterStat.index}__].unidad}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Precio Unitario</label>
-                            <input type="number" step="0.01" th:name="|lineas[${iterStat.index}].precioUnitario|" class="form-control" required th:value="${linea.precioUnitario}">
+                            <input type="number" step="0.01" class="form-control" required th:field="*{lineas[__${iterStat.index}__].precioUnitario}">
                         </div>
                         <div class="col-md-1">
                             <button type="button" class="btn btn-danger remove-linea"><i class="bi bi-trash"></i></button>
@@ -95,6 +95,7 @@
 
                 <hr>
                 <h4>Términos y Condiciones</h4>
+                <!-- Estos campos ya usan th:field y están correctos -->
                 <div class="mb-3">
                     <label for="descripcionGeneral" class="form-label">Descripción General del Servicio</label>
                     <textarea id="descripcionGeneral" th:field="*{descripcionGeneral}" class="form-control" rows="3"></textarea>
@@ -128,13 +129,12 @@
         </div>
     </div>
 
-
+    <!-- CORRECCIÓN: Script unificado y mejorado, idéntico en funcionalidad al de productos -->
     <script th:inline="javascript">
         /*<![CDATA[*/
-        let lineaIndex = /*[[${cotizacion.lineas != null ? cotizacion.lineas.size() : 0}]]*/ 0;
-
         document.addEventListener('DOMContentLoaded', function () {
-            // Script para añadir/quitar líneas
+            // --- LÓGICA PARA LÍNEAS DE SERVICIOS ---
+            let lineaIndex = /*[[${cotizacion.lineas != null ? cotizacion.lineas.size() : 0}]]*/ 0;
             const container = document.getElementById('lineas-container');
             const addButton = document.getElementById('addLinea');
 
@@ -162,14 +162,14 @@
                  addLinea();
             }
 
-            // Script para manejar el IVA
+            // --- LÓGICA PARA EL IVA ---
             const aplicarIvaCheckbox = document.getElementById('aplicarIva');
             const porcentajeContainer = document.getElementById('porcentaje-iva-container');
             const porcentajeDisplayInput = document.getElementById('porcentajeIvaDisplay');
             const porcentajeHiddenInput = document.getElementById('porcentajeIva');
             const form = document.getElementById('cotizacionForm');
 
-            function initDisplayValue() {
+            function initIvaDisplay() {
                 const decimalValue = parseFloat(porcentajeHiddenInput.value);
                 if (!isNaN(decimalValue) && decimalValue > 0) {
                     porcentajeDisplayInput.value = (decimalValue * 100).toFixed(0);
@@ -178,7 +178,7 @@
                 }
             }
 
-            function togglePorcentajeVisibility() {
+            function toggleIvaVisibility() {
                 porcentajeContainer.style.display = aplicarIvaCheckbox.checked ? 'block' : 'none';
             }
 
@@ -195,9 +195,10 @@
                 }
             });
 
-            aplicarIvaCheckbox.addEventListener('change', togglePorcentajeVisibility);
-            initDisplayValue();
-            togglePorcentajeVisibility();
+            aplicarIvaCheckbox.addEventListener('change', toggleIvaVisibility);
+
+            initIvaDisplay();
+            toggleIvaVisibility();
         });
         /*]]>*/
     </script>

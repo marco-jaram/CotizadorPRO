@@ -187,12 +187,18 @@ public class CotizacionServiceImpl implements CotizacionService {
     }
 
     private EmpresaDTO mapToEmpresaDTO(Empresa empresa) {
+        if (empresa == null) {
+            return null;
+        }
         EmpresaDTO dto = new EmpresaDTO();
         dto.setId(empresa.getId());
         dto.setNombreEmpresa(empresa.getNombreEmpresa());
         dto.setNombreContacto(empresa.getNombreContacto());
         dto.setCorreo(empresa.getCorreo());
         dto.setDireccion(empresa.getDireccion());
+        dto.setTelefono(empresa.getTelefono());
+        dto.setRfc(empresa.getRfc());
+        dto.setSitioWeb(empresa.getSitioWeb());
         dto.setTieneLogo(empresa.getLogo() != null && empresa.getLogo().length > 0);
         return dto;
     }

@@ -9,6 +9,7 @@ import com.tuempresa.cotizador.service.EmpresaService;
 import com.tuempresa.cotizador.service.PdfGenerationService;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -96,12 +97,31 @@ public class CotizacionController {
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> descargarPdfCotizacion(@PathVariable Long id) {
         try {
+            Object cotizacionDto = cotizacionService.findCotizacionById(id);
+            String folio = "";
+            if (cotizacionDto instanceof CotizacionServiciosDTO) {
+                folio = ((CotizacionServiciosDTO) cotizacionDto).getFolio();
+            } else if (cotizacionDto instanceof CotizacionProductosDTO) {
+                folio = ((CotizacionProductosDTO) cotizacionDto).getFolio();
+            }
+
             byte[] pdfBytes = pdfGenerationService.generarPdfCotizacion(id);
-            String filename = "cotizacion-" + id + ".pdf";
+            String filename = "Cotizacion-" + folio + ".pdf";
+
+            // --- CORRECCIÓN: AÑADIR ENCABEZADOS ANTI-CACHÉ ---
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("inline", filename); // 'inline' para abrir en el navegador
+
+            // Instrucciones para el navegador y proxies para no cachear
+            headers.setCacheControl("no-cache, no-store, must-revalidate");
+            headers.setPragma("no-cache");
+            headers.setExpires(0);
+
             return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-                    .contentType(MediaType.APPLICATION_PDF)
+                    .headers(headers)
                     .body(pdfBytes);
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
@@ -142,6 +162,9 @@ public class CotizacionController {
             createDto.setMetodosAceptados(dto.getMetodosAceptados());
             createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
             createDto.setTiempoRespuesta(dto.getTiempoRespuesta());
+            createDto.setAplicarIva(dto.isAplicarIva());
+            createDto.setPorcentajeIva(dto.getPorcentajeIva());
+
             createDto.setLineas(dto.getLineas().stream().map(l -> {
                 LineaCotizacionServicioCreateDTO linea = new LineaCotizacionServicioCreateDTO();
                 linea.setConcepto(l.getConcepto());
@@ -171,6 +194,9 @@ public class CotizacionController {
             createDto.setGarantia(dto.getGarantia());
             createDto.setPoliticaDevoluciones(dto.getPoliticaDevoluciones());
             createDto.setFormasPago(dto.getFormasPago());
+            createDto.setAplicarIva(dto.isAplicarIva());
+            createDto.setPorcentajeIva(dto.getPorcentajeIva());
+
             createDto.setLineas(dto.getLineas().stream().map(l -> {
                 LineaCotizacionProductoCreateDTO linea = new LineaCotizacionProductoCreateDTO();
                 linea.setProductoId(l.getProductoId());

@@ -71,4 +71,15 @@ public class EmpresaServiceImpl implements EmpresaService {
 
         return empresaRepository.save(miEmpresaToSave);
     }
+
+    @Override
+    @Transactional
+    public void eliminarLogoMiEmpresa() {
+        // Busca "Mi Empresa"
+        empresaRepository.findByEsMiEmpresa(true).ifPresent(miEmpresa -> {
+            // Si la encuentra, pone el logo a null y guarda los cambios
+            miEmpresa.setLogo(null);
+            empresaRepository.save(miEmpresa);
+        });
+    }
 }

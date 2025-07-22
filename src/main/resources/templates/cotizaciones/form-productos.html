@@ -1,52 +1,48 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head th:replace="~{fragments/header :: header}"></head>
 
 <body>
 <div class="container">
-<nav th:replace="~{fragments/common :: navbar}"></nav>
-<div layout:fragment="content">
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="bi bi-box-seam"></i> Nueva Cotización de Productos</h3>
-        </div>
-        <div class="card-body">
-            <form th:action="@{/cotizaciones/productos}" th:object="${cotizacion}" method="post">
-                <h4>Datos Generales</h4>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="clienteId" class="form-label">Cliente</label>
-                        <select id="clienteId" name="clienteId" class="form-select" required>
-                            <option value="">Seleccione un cliente...</option>
-                            <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nombreEmpresa}"></option>
-                        </select>
+    <nav th:replace="~{fragments/common :: navbar}"></nav>
+    <div class="content">
+        <div class="card">
+            <div class="card-header">
+                <h3 th:if="${cotizacionId == null}"><i class="bi bi-box-seam"></i> Nueva Cotización de Productos</h3>
+                <h3 th:unless="${cotizacionId == null}"><i class="bi bi-pencil-square"></i> Editar Cotización de Productos</h3>
+            </div>
+            <div class="card-body">
+                <!-- CORRECCIÓN: La acción del formulario y el ID son correctos. No se necesita cambio aquí. -->
+                <form th:action="${cotizacionId == null} ? @{/cotizaciones/productos} : @{/cotizaciones/productos/{id}(id=${cotizacionId})}" th:object="${cotizacion}" method="post" id="cotizacionForm">
+                    <h4>Datos Generales</h4>
+                    <!-- CORRECCIÓN: Se ha arreglado la estructura de las filas (row) y columnas (col) para que no se rompa el layout. -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="clienteId" class="form-label">Cliente</label>
+                            <select id="clienteId" class="form-select" th:field="*{clienteId}" required>
+                                <option value="">Seleccione un cliente...</option>
+                                <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nombreEmpresa}"></option>
+                            </select>
+                        </div>
                         <div class="col-md-6">
                             <label for="estatus" class="form-label">Estatus</label>
                             <select id="estatus" class="form-select" th:field="*{estatus}" required>
-                                <!-- La opción por defecto, seleccionada si el estatus es nulo (creación) -->
-                                <option th:if="${cotizacion.estatus == null}" value="BORRADOR" selected>BORRADOR</option>
-
-                                <!-- Itera sobre todos los estatus disponibles -->
-                                <option th:each="est : ${estatusDisponibles}"
-                                        th:value="${est.name()}"
-                                        th:text="${est.name()}"
-                                        th:selected="${cotizacion.estatus == est}">
-                                </option>
+                                <option th:each="est : ${estatusDisponibles}" th:value="${est.name()}" th:text="${est.name()}"></option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="vendedor" class="form-label">Vendedor (Mi Empresa)</label>
-                        <input type="text" class="form-control" id="vendedor" th:value="${vendedor.nombreEmpresa}" readonly disabled>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="vendedor" class="form-label">Vendedor (Mi Empresa)</label>
+                            <input type="text" class="form-control" id="vendedor" th:value="${vendedor.nombreEmpresa}" readonly disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="vigencia" class="form-label">Vigencia</label>
+                            <input type="text" id="vigencia" class="form-control" th:field="*{vigencia}" placeholder="Ej: 30 días">
+                        </div>
                     </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="vigencia" class="form-label">Vigencia</label>
-                        <input type="text" id="vigencia" name="vigencia" class="form-control" th:field="*{vigencia}" placeholder="Ej: 30 días o hasta agotar existencias">
-                    </div>
-                    <!-- **** INICIO DE LA SECCIÓN DE IVA **** -->
+
                     <hr>
                     <h4>Impuestos</h4>
                     <div class="row mb-3 align-items-center">
@@ -62,173 +58,180 @@
                                 <input type="number" step="1" min="0" max="100" class="form-control" id="porcentajeIvaDisplay">
                                 <span class="input-group-text">%</span>
                             </div>
-                            <small class="form-text text-muted">Ej: 16 para 16%, 8 para 8%.</small>
                             <input type="hidden" id="porcentajeIva" th:field="*{porcentajeIva}">
                         </div>
                     </div>
-                    <!-- **** FIN DE LA SECCIÓN DE IVA **** -->
-                    <div class="col-md-6">
-                        <label for="formasPago" class="form-label">Formas de Pago</label>
-                        <input type="text" id="formasPago" name="formasPago" class="form-control" th:field="*{formasPago}" placeholder="Ej: Contado, Crédito 30 días">
-                    </div>
-                </div>
 
-                <hr>
-                <h4>Productos</h4>
-                <div id="lineas-container">
-                    <!-- Las líneas de productos se añadirán aquí dinámicamente -->
-                </div>
-                <button type="button" id="addLinea" class="btn btn-success mt-2"><i class="bi bi-plus-circle"></i> Añadir Producto</button>
-                <hr>
-                <h4>Términos y Condiciones</h4>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="condicionesEntrega" class="form-label">Condiciones de Entrega</label>
-                        <input type="text" id="condicionesEntrega" name="condicionesEntrega" class="form-control" th:field="*{condicionesEntrega}" placeholder="Ej: LAB Almacén">
+                    <hr>
+                    <h4>Productos</h4>
+                    <!-- CORRECCIÓN: El bucle para mostrar las líneas existentes AHORA ESTÁ DENTRO del contenedor. Este era el error principal. -->
+                    <div id="lineas-container">
+                        <div th:each="linea, iterStat : *{lineas}" class="row align-items-end mb-2 linea-item">
+                            <div class="col-md-4">
+                                <label class="form-label">Producto</label>
+                                <select th:field="*{lineas[__${iterStat.index}__].productoId}" class="form-select producto-select" required>
+                                    <option value="">Seleccione un producto...</option>
+                                    <option th:each="p : ${productos}"
+                                            th:value="${p.id}"
+                                            th:text="${p.nombre}"
+                                            th:attr="data-price=${p.precioUnitarioBase}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Cantidad</label>
+                                <input type="number" th:field="*{lineas[__${iterStat.index}__].cantidad}" class="form-control" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Unidad</label>
+                                <input type="text" th:field="*{lineas[__${iterStat.index}__].unidad}" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Precio Unitario</label>
+                                <input type="number" step="0.01" th:field="*{lineas[__${iterStat.index}__].precioUnitario}" class="form-control precio-unitario-input" required>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger remove-linea"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="garantia" class="form-label">Garantía</label>
-                        <input type="text" id="garantia" name="garantia" class="form-control" th:field="*{garantia}" placeholder="Ej: 1 año contra defectos de fábrica">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="politicaDevoluciones" class="form-label">Política de Devoluciones</label>
-                        <input type="text" id="politicaDevoluciones" name="politicaDevoluciones" class="form-control" th:field="*{politicaDevoluciones}" placeholder="Ej: No se aceptan devoluciones">
-                    </div>
-                </div>
+                    <!-- CORRECCIÓN: El botón de añadir ahora está en una posición lógica. -->
+                    <button type="button" id="addLinea" class="btn btn-success mt-2"><i class="bi bi-plus-circle"></i> Añadir Producto</button>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Crear Cotización</button>
-                    <a th:href="@{/}" class="btn btn-secondary btn-lg">Cancelar</a>
-                </div>
-            </form>
+                    <hr>
+                    <h4>Términos y Condiciones</h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="formasPago" class="form-label">Formas de Pago</label>
+                            <input type="text" id="formasPago" class="form-control" th:field="*{formasPago}" placeholder="Ej: Contado, Crédito 30 días">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="condicionesEntrega" class="form-label">Condiciones de Entrega</label>
+                            <input type="text" id="condicionesEntrega" class="form-control" th:field="*{condicionesEntrega}" placeholder="Ej: LAB Almacén">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="garantia" class="form-label">Garantía</label>
+                            <input type="text" id="garantia" class="form-control" th:field="*{garantia}" placeholder="Ej: 1 año contra defectos de fábrica">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="politicaDevoluciones" class="form-label">Política de Devoluciones</label>
+                            <textarea id="politicaDevoluciones" class="form-control" th:field="*{politicaDevoluciones}" placeholder="Ej: No se aceptan devoluciones" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <!-- CORRECCIÓN: Texto del botón dinámico -->
+                        <button type="submit" class="btn btn-primary btn-lg" th:text="${cotizacionId == null} ? 'Crear Cotización' : 'Guardar Cambios'"></button>
+                        <a th:href="@{/cotizaciones}" class="btn btn-secondary btn-lg">Cancelar</a>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Plantilla para la fila de productos, oculta -->
-    <template id="producto-linea-template">
-        <div class="row align-items-end mb-2 linea-item">
-            <div class="col-md-4">
-                <label class="form-label">Producto</label>
-                <select name="lineas[__INDEX__].productoId" class="form-select" required>
-                    <option value="">Seleccione un producto...</option>
-                    <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}"></option>
-                </select>
+        <!-- Plantilla para la fila de productos, oculta. Esto está bien. -->
+        <template id="producto-linea-template">
+            <div class="row align-items-end mb-2 linea-item">
+                <div class="col-md-4">
+                    <label class="form-label">Producto</label>
+                    <select name="lineas[__INDEX__].productoId" class="form-select producto-select" required>
+                        <option value="">Seleccione un producto...</option>
+                        <option th:each="p : ${productos}"
+                                th:value="${p.id}"
+                                th:text="${p.nombre}"
+                                th:attr="data-price=${p.precioUnitarioBase}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" name="lineas[__INDEX__].cantidad" class="form-control" value="1" required></div>
+                <div class="col-md-2"><label class="form-label">Unidad</label><input type="text" name="lineas[__INDEX__].unidad" class="form-control" value="PZA" required></div>
+                <div class="col-md-3"><label class="form-label">Precio Unitario</label><input type="number" step="0.01" name="lineas[__INDEX__].precioUnitario" class="form-control precio-unitario-input" required></div>
+                <div class="col-md-1"><button type="button" class="btn btn-danger remove-linea"><i class="bi bi-trash"></i></button></div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label">Cantidad</label>
-                <input type="number" name="lineas[__INDEX__].cantidad" class="form-control" value="1" required>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Unidad</label>
-                <input type="text" name="lineas[__INDEX__].unidad" class="form-control" value="PZA" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Precio Unitario</label>
-                <input type="number" step="0.01" name="lineas[__INDEX__].precioUnitario" class="form-control" required>
-            </div>
-            <div class="col-md-1">
-                <button type="button" class="btn btn-danger remove-linea"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </template>
+        </template>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let lineaIndex = 0;
-            const container = document.getElementById('lineas-container');
-            const addButton = document.getElementById('addLinea');
-            const template = document.getElementById('producto-linea-template');
+        <!-- CORRECCIÓN: Un único bloque de SCRIPT, simplificado y funcional -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function () {
+                // --- LÓGICA PARA LÍNEAS DE PRODUCTOS ---
+                let lineaIndex = /*[[${cotizacion.lineas != null ? cotizacion.lineas.size() : 0}]]*/ 0;
+                const container = document.getElementById('lineas-container');
+                const addButton = document.getElementById('addLinea');
+                const template = document.getElementById('producto-linea-template');
 
-            function addLinea() {
-                const clone = template.content.cloneNode(true);
-                // Reemplazar el placeholder de índice en los nombres de los inputs
-                clone.querySelectorAll('[name]').forEach(input => {
-                    input.name = input.name.replace('__INDEX__', lineaIndex);
+                function addLinea() {
+                    const cloneHtml = template.innerHTML.replace(/__INDEX__/g, lineaIndex);
+                    const div = document.createElement('div');
+                    div.innerHTML = cloneHtml;
+                    while(div.firstChild) {
+                        container.appendChild(div.firstChild);
+                    }
+                    lineaIndex++;
+                }
+
+                addButton.addEventListener('click', addLinea);
+
+                container.addEventListener('click', function (e) {
+                    if (e.target.closest('.remove-linea')) {
+                        e.target.closest('.linea-item').remove();
+                    }
                 });
-                container.appendChild(clone);
-                lineaIndex++;
-            }
 
-            addButton.addEventListener('click', addLinea);
+                container.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('producto-select')) {
+                        const selectedOption = e.target.options[e.target.selectedIndex];
+                        const price = selectedOption.getAttribute('data-price');
+                        const lineaItem = e.target.closest('.linea-item');
+                        const precioInput = lineaItem.querySelector('.precio-unitario-input');
+                        if (price) {
+                            precioInput.value = price;
+                        }
+                    }
+                });
 
-            container.addEventListener('click', function (e) {
-                if (e.target.closest('.remove-linea')) {
-                    e.target.closest('.linea-item').remove();
+                if (lineaIndex === 0) {
+                     addLinea();
                 }
+
+                // --- LÓGICA PARA EL IVA ---
+                const aplicarIvaCheckbox = document.getElementById('aplicarIva');
+                const porcentajeContainer = document.getElementById('porcentaje-iva-container');
+                const porcentajeDisplayInput = document.getElementById('porcentajeIvaDisplay');
+                const porcentajeHiddenInput = document.getElementById('porcentajeIva');
+                const form = document.getElementById('cotizacionForm');
+
+                function initIvaDisplay() {
+                    const decimalValue = parseFloat(porcentajeHiddenInput.value);
+                    if (!isNaN(decimalValue) && decimalValue > 0) {
+                        porcentajeDisplayInput.value = (decimalValue * 100).toFixed(0);
+                    } else {
+                        porcentajeDisplayInput.value = 16;
+                    }
+                }
+
+                function toggleIvaVisibility() {
+                    porcentajeContainer.style.display = aplicarIvaCheckbox.checked ? 'block' : 'none';
+                }
+
+                form.addEventListener('submit', function(event) {
+                    if (aplicarIvaCheckbox.checked) {
+                        const percentageValue = parseFloat(porcentajeDisplayInput.value);
+                        if (!isNaN(percentageValue)) {
+                            porcentajeHiddenInput.value = percentageValue / 100.0;
+                        } else {
+                            porcentajeHiddenInput.value = 0;
+                        }
+                    } else {
+                        porcentajeHiddenInput.value = 0;
+                    }
+                });
+
+                aplicarIvaCheckbox.addEventListener('change', toggleIvaVisibility);
+
+                initIvaDisplay();
+                toggleIvaVisibility();
             });
-
-            // Añadir una línea inicial
-            addLinea();
-        });
-    </script>
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function () {
-            // Script para añadir/quitar líneas de productos
-            let lineaIndex = /*[[${cotizacion.lineas != null ? cotizacion.lineas.size() : 0}]]*/ 0;
-            const container = document.getElementById('lineas-container');
-            const addButton = document.getElementById('addLinea');
-            const template = document.getElementById('producto-linea-template');
-
-            function addLinea() {
-                const cloneHtml = template.innerHTML.replace(/__INDEX__/g, lineaIndex);
-                const div = document.createElement('div');
-                div.innerHTML = cloneHtml;
-                while (div.firstChild) {
-                    container.appendChild(div.firstChild);
-                }
-                lineaIndex++;
-            }
-
-            addButton.addEventListener('click', addLinea);
-            container.addEventListener('click', function (e) {
-                if (e.target.closest('.remove-linea')) {
-                    e.target.closest('.linea-item').remove();
-                }
-            });
-            if (lineaIndex === 0) {
-                 addLinea();
-            }
-
-            // Script para manejar el IVA (idéntico al de servicios)
-            const aplicarIvaCheckbox = document.getElementById('aplicarIva');
-            const porcentajeContainer = document.getElementById('porcentaje-iva-container');
-            const porcentajeDisplayInput = document.getElementById('porcentajeIvaDisplay');
-            const porcentajeHiddenInput = document.getElementById('porcentajeIva');
-            const form = document.getElementById('cotizacionForm');
-
-            function initDisplayValue() {
-                const decimalValue = parseFloat(porcentajeHiddenInput.value);
-                if (!isNaN(decimalValue)) {
-                    porcentajeDisplayInput.value = (decimalValue * 100).toFixed(0);
-                } else {
-                    porcentajeDisplayInput.value = 16;
-                }
-            }
-
-            function togglePorcentajeVisibility() {
-                porcentajeContainer.style.display = aplicarIvaCheckbox.checked ? 'block' : 'none';
-            }
-
-            porcentajeDisplayInput.addEventListener('input', function() {
-                const percentageValue = parseFloat(this.value);
-                if (!isNaN(percentageValue)) {
-                    porcentajeHiddenInput.value = percentageValue / 100;
-                }
-            });
-
-            form.addEventListener('submit', function() {
-                const percentageValue = parseFloat(porcentajeDisplayInput.value);
-                if (!isNaN(percentageValue)) {
-                    porcentajeHiddenInput.value = percentageValue / 100;
-                }
-            });
-
-            aplicarIvaCheckbox.addEventListener('change', togglePorcentajeVisibility);
-            initDisplayValue();
-            togglePorcentajeVisibility();
-        });
-    </script>
-</div>
+            /*]]>*/
+        </script>
+    </div>
 </div>
 </body>
 </html>

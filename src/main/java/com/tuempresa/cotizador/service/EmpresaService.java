@@ -17,4 +17,6 @@ public interface EmpresaService {
 
     List<Empresa> findClientes();
     Empresa guardarMiEmpresa(Empresa empresa, MultipartFile logoFile) throws IOException;
+    void eliminarLogoMiEmpresa();
+
 }
