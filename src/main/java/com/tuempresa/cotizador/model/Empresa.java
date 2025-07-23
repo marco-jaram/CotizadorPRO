@@ -16,6 +16,7 @@ public class Empresa {
     private String telefono;
     private String rfc;
     private String sitioWeb;
+    @Column(columnDefinition = "TEXT")
     private String direccion;
 
     @Lob

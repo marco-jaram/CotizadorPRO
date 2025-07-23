@@ -10,9 +10,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue("PRODUCTOS")
 public class CotizacionProductos extends Cotizacion {
+    @Column(columnDefinition = "TEXT")
     private String condicionesEntrega;
+    @Column(columnDefinition = "TEXT")
     private String garantia;
+    @Column(columnDefinition = "TEXT")
     private String politicaDevoluciones;
+    @Column(columnDefinition = "TEXT")
     private String formasPago;
 
     @OneToMany(mappedBy = "cotizacionProductos", cascade = CascadeType.ALL, orphanRemoval = true)

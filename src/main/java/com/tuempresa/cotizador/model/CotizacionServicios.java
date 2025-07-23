@@ -10,9 +10,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue("SERVICIOS")
 public class CotizacionServicios extends Cotizacion {
+    @Column(columnDefinition = "TEXT")
     private String descripcionGeneral;
+    @Column(columnDefinition = "TEXT")
     private String formaPago;
+    @Column(columnDefinition = "TEXT")
     private String metodosAceptados;
+    @Column(columnDefinition = "TEXT")
     private String condicionesEntrega;
     private String tiempoRespuesta;
 
