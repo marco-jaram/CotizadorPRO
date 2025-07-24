@@ -1,11 +1,12 @@
 package com.tuempresa.cotizador.web.controller;
 
 import com.tuempresa.cotizador.model.Producto;
-import com.tuempresa.cotizador.repository.ProductoRepository;
+
+import com.tuempresa.cotizador.service.ProductoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -14,16 +15,21 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class ProductoController {
 
-    private final ProductoRepository productoRepository;
+    // --- CAMBIO: Inyecta el servicio en lugar del repositorio ---
+    private final ProductoService productoService;
 
-    // 1. Mostrar la lista de productos
+    // TODO: Usar el método real una vez implementada la seguridad
+    private Long getAuthenticatedUserId(Authentication authentication) {
+        return 1L; // Stub temporal
+    }
+
     @GetMapping
-    public String listarProductos(Model model) {
-        model.addAttribute("productos", productoRepository.findAll());
+    public String listarProductos(Model model, Authentication authentication) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        model.addAttribute("productos", productoService.findAllByUsuarioId(usuarioId));
         return "productos/lista-productos";
     }
 
-    // 2. Mostrar formulario para crear un nuevo producto
     @GetMapping("/nuevo")
     public String mostrarFormularioNuevo(Model model) {
         model.addAttribute("producto", new Producto());
@@ -31,18 +37,18 @@ public class ProductoController {
         return "productos/form-producto";
     }
 
-    // 3. Guardar un nuevo producto
     @PostMapping("/guardar")
-    public String guardarProducto(@ModelAttribute Producto producto, RedirectAttributes redirectAttributes) {
-        productoRepository.save(producto);
+    public String guardarProducto(@ModelAttribute Producto producto, Authentication authentication, RedirectAttributes redirectAttributes) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        productoService.guardarProducto(producto, usuarioId);
         redirectAttributes.addFlashAttribute("successMessage", "Producto guardado correctamente.");
         return "redirect:/productos";
     }
 
-    // 4. Mostrar formulario para editar un producto existente
     @GetMapping("/editar/{id}")
-    public String mostrarFormularioEditar(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
-        return productoRepository.findById(id)
+    public String mostrarFormularioEditar(@PathVariable Long id, Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        return productoService.findByIdAndUsuarioId(id, usuarioId)
                 .map(producto -> {
                     model.addAttribute("producto", producto);
                     model.addAttribute("pageTitle", "Editar Producto");
@@ -54,11 +60,11 @@ public class ProductoController {
                 });
     }
 
-    // 5. Eliminar un producto
     @GetMapping("/eliminar/{id}")
-    public String eliminarProducto(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String eliminarProducto(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
         try {
-            productoRepository.deleteById(id);
+            productoService.eliminarProducto(id, usuarioId);
             redirectAttributes.addFlashAttribute("successMessage", "Producto eliminado correctamente.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "No se puede eliminar el producto porque está siendo usado en una o más cotizaciones.");

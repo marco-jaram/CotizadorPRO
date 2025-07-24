@@ -32,6 +32,8 @@ public abstract class Cotizacion {
     @Column(name = "porcentaje_iva")
     private BigDecimal porcentajeIva = new BigDecimal("0.16");
 
+    @Column(name = "usuario_id", nullable = false)
+    private Long usuarioId;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
@@ -40,4 +42,5 @@ public abstract class Cotizacion {
     @ManyToOne
     @JoinColumn(name = "vendedor_id", nullable = false)
     private Empresa vendedor;
+
 }

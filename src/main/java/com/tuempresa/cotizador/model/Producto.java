@@ -11,9 +11,12 @@ public class Producto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true, nullable = false)
+
+    @Column(nullable = false)
     private String sku;
     private String nombre;
     private String especificaciones;
     private BigDecimal precioUnitarioBase;
+    @Column(name = "usuario_id")
+    private Long usuarioId;
 }

@@ -16,6 +16,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+
+
 @Controller
 @RequestMapping("/empresas")
 @RequiredArgsConstructor
@@ -23,48 +26,54 @@ public class EmpresaController {
 
     private final EmpresaService empresaService;
 
-    @GetMapping("/mi-empresa")
-    public String mostrarFormularioMiEmpresa(Model model) {
-        // Busca si "Mi Empresa" ya existe.
-        Empresa miEmpresa = empresaService.findMiEmpresa()
-                .orElse(new Empresa()); // Si no existe, crea un objeto nuevo.
-
-        model.addAttribute("miEmpresa", miEmpresa);
-        return "empresas/form-mi-empresa"; // Apunta a la nueva vista que crearemos.
+    // TODO: Implementar un método real para obtener el ID del usuario.
+    // Por ahora, usaremos un valor fijo para que el código compile y funcione.
+    private Long getAuthenticatedUserId(Authentication authentication) {
+        // En el futuro, esto obtendrá el ID del usuario real que ha iniciado sesión.
+        // Ejemplo:
+        // CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        // return userDetails.getId();
+        return 1L; // Usamos 1L como ID de usuario de prueba.
     }
 
-    // --- NUEVO ENDPOINT (POST) PARA GUARDAR LOS DATOS ---
+    @GetMapping("/mi-empresa")
+    public String mostrarFormularioMiEmpresa(Model model, Authentication authentication) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        Empresa miEmpresa = empresaService.findMiEmpresaByUsuarioId(usuarioId)
+                .orElse(new Empresa());
+        model.addAttribute("miEmpresa", miEmpresa);
+        return "empresas/form-mi-empresa";
+    }
+
     @PostMapping("/mi-empresa")
     public String guardarMiEmpresa(@ModelAttribute("miEmpresa") Empresa empresa,
                                    @RequestParam("logoFile") MultipartFile logoFile,
-                                   Model model) throws IOException {
-
-        empresaService.guardarMiEmpresa(empresa, logoFile);
-
-        // Añadimos un mensaje de éxito para mostrar en la vista.
-        model.addAttribute("successMessage", "Los datos de 'Mi Empresa' se han guardado correctamente.");
-
-        // Volvemos a cargar los datos por si acaso y redirigimos al mismo formulario.
-        return mostrarFormularioMiEmpresa(model);
+                                   RedirectAttributes redirectAttributes, Authentication authentication) throws IOException {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        empresaService.guardarMiEmpresa(empresa, logoFile, usuarioId);
+        redirectAttributes.addFlashAttribute("successMessage", "Los datos de 'Mi Empresa' se han guardado correctamente.");
+        return "redirect:/empresas/mi-empresa";
     }
+
     @GetMapping("/mi-empresa/eliminar-logo")
-    public String eliminarLogoMiEmpresa(RedirectAttributes redirectAttributes) {
-        empresaService.eliminarLogoMiEmpresa();
+    public String eliminarLogoMiEmpresa(RedirectAttributes redirectAttributes, Authentication authentication) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        empresaService.eliminarLogoMiEmpresa(usuarioId);
         redirectAttributes.addFlashAttribute("successMessage", "El logo ha sido eliminado correctamente.");
         return "redirect:/empresas/mi-empresa";
     }
+
     @GetMapping("/{id}/logo")
-    public ResponseEntity<byte[]> getEmpresaLogo(@PathVariable Long id) {
-        Empresa empresa = empresaService.findById(id)
+    public ResponseEntity<byte[]> getEmpresaLogo(@PathVariable Long id, Authentication authentication) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        Empresa empresa = empresaService.findByIdAndUsuarioId(id, usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
 
         if (empresa.getLogo() == null || empresa.getLogo().length == 0) {
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(empresa.getLogo());
     }
-
 
     @GetMapping("/nueva")
     public String mostrarFormularioNuevaEmpresa(Model model) {
@@ -73,16 +82,17 @@ public class EmpresaController {
     }
 
     @PostMapping
-    // MODIFICADO: Ya no recibe MultipartFile ni lanza IOException
-    public String guardarEmpresa(@ModelAttribute Empresa empresa) {
-        empresaService.guardarEmpresa(empresa);
-        return "redirect:/empresas"; // Redirige a la lista de clientes después de guardar
+    public String guardarEmpresa(@ModelAttribute Empresa empresa, Authentication authentication) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        empresaService.guardarEmpresa(empresa, usuarioId);
+        return "redirect:/empresas";
     }
+
     @GetMapping
-    public String listarEmpresas(Model model) {
-        List<Empresa> listaDeClientes = empresaService.findClientes();
+    public String listarEmpresas(Model model, Authentication authentication) {
+        Long usuarioId = getAuthenticatedUserId(authentication);
+        List<Empresa> listaDeClientes = empresaService.findClientesByUsuarioId(usuarioId);
         model.addAttribute("empresas", listaDeClientes);
         return "empresas/lista-empresas";
     }
-
 }

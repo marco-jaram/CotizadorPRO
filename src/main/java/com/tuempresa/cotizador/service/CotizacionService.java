@@ -9,17 +9,15 @@ import java.util.List;
 
 public interface CotizacionService {
 
-    // --- MÉTODOS DE CREACIÓN ---
-    CotizacionServiciosDTO crearCotizacionServicios(CotizacionServiciosCreateDTO dto);
-    CotizacionProductosDTO crearCotizacionProductos(CotizacionProductosCreateDTO dto);
+    CotizacionServiciosDTO crearCotizacionServicios(CotizacionServiciosCreateDTO dto, Long usuarioId);
 
-    // --- MÉTODOS DE ACTUALIZACIÓN (EDICIÓN) ---
-    CotizacionServiciosDTO actualizarCotizacionServicios(Long id, CotizacionServiciosCreateDTO dto);
-    CotizacionProductosDTO actualizarCotizacionProductos(Long id, CotizacionProductosCreateDTO dto);
+    CotizacionProductosDTO crearCotizacionProductos(CotizacionProductosCreateDTO dto, Long usuarioId);
 
-    // --- MÉTODOS DE BÚSQUEDA ---
-    Object findCotizacionById(Long id);
+    CotizacionServiciosDTO actualizarCotizacionServicios(Long id, CotizacionServiciosCreateDTO dto, Long usuarioId);
 
-    // AÑADIDO: Nuevo método para el listado
-    List<Object> findAllCotizaciones();
+    CotizacionProductosDTO actualizarCotizacionProductos(Long id, CotizacionProductosCreateDTO dto, Long usuarioId);
+
+    Object findCotizacionByIdAndUsuarioId(Long id, Long usuarioId);
+
+    List<Object> findAllCotizacionesByUsuarioId(Long usuarioId);
 }

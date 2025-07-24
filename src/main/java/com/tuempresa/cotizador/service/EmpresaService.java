@@ -6,17 +6,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+
 public interface EmpresaService {
 
-    Empresa guardarEmpresa(Empresa empresa);
+    Empresa guardarEmpresa(Empresa empresa, Long usuarioId);
 
-    Optional<Empresa> findById(Long id);
-    List<Empresa> findAll();
+    Optional<Empresa> findByIdAndUsuarioId(Long id, Long usuarioId);
 
-    Optional<Empresa> findMiEmpresa();
+    List<Empresa> findAllByUsuarioId(Long usuarioId);
 
-    List<Empresa> findClientes();
-    Empresa guardarMiEmpresa(Empresa empresa, MultipartFile logoFile) throws IOException;
-    void eliminarLogoMiEmpresa();
+    Optional<Empresa> findMiEmpresaByUsuarioId(Long usuarioId);
+
+    List<Empresa> findClientesByUsuarioId(Long usuarioId);
+
+    Empresa guardarMiEmpresa(Empresa empresa, MultipartFile logoFile, Long usuarioId) throws IOException;
+
+    void eliminarLogoMiEmpresa(Long usuarioId);
 
 }

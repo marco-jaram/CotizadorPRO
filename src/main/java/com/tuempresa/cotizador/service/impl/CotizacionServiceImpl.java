@@ -2,7 +2,9 @@ package com.tuempresa.cotizador.service.impl;
 
 import com.tuempresa.cotizador.exception.ResourceNotFoundException;
 import com.tuempresa.cotizador.model.*;
-import com.tuempresa.cotizador.repository.*;
+import com.tuempresa.cotizador.repository.CotizacionRepository;
+import com.tuempresa.cotizador.repository.EmpresaRepository;
+import com.tuempresa.cotizador.repository.ProductoRepository;
 import com.tuempresa.cotizador.service.CotizacionService;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -25,11 +27,14 @@ public class CotizacionServiceImpl implements CotizacionService {
 
     @Override
     @Transactional
-    public CotizacionServiciosDTO crearCotizacionServicios(CotizacionServiciosCreateDTO dto) {
-        Empresa cliente = empresaRepository.findById(dto.getClienteId()).orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + dto.getClienteId()));
-        Empresa vendedor = empresaRepository.findById(dto.getVendedorId()).orElseThrow(() -> new ResourceNotFoundException("Vendedor no encontrado con ID: " + dto.getVendedorId()));
+    public CotizacionServiciosDTO crearCotizacionServicios(CotizacionServiciosCreateDTO dto, Long usuarioId) {
+        Empresa cliente = empresaRepository.findByIdAndUsuarioId(dto.getClienteId(), usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + dto.getClienteId()));
+        Empresa vendedor = empresaRepository.findByIdAndUsuarioId(dto.getVendedorId(), usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendedor no encontrado con ID: " + dto.getVendedorId()));
 
         CotizacionServicios cotizacion = new CotizacionServicios();
+        cotizacion.setUsuarioId(usuarioId); // Asignar el dueño
         cotizacion.setCliente(cliente);
         cotizacion.setVendedor(vendedor);
         cotizacion.setVigencia(dto.getVigencia());
@@ -41,6 +46,8 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setFolio(generarFolioUnico());
         cotizacion.setFechaEmision(LocalDate.now());
         cotizacion.setEstatus(dto.getEstatus());
+        cotizacion.setAplicarIva(dto.isAplicarIva());
+        cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
         List<LineaCotizacionServicio> lineas = dto.getLineas().stream().map(lineaDto -> {
             LineaCotizacionServicio linea = new LineaCotizacionServicio();
@@ -59,11 +66,14 @@ public class CotizacionServiceImpl implements CotizacionService {
 
     @Override
     @Transactional
-    public CotizacionProductosDTO crearCotizacionProductos(CotizacionProductosCreateDTO dto) {
-        Empresa cliente = empresaRepository.findById(dto.getClienteId()).orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + dto.getClienteId()));
-        Empresa vendedor = empresaRepository.findById(dto.getVendedorId()).orElseThrow(() -> new ResourceNotFoundException("Vendedor no encontrado con ID: " + dto.getVendedorId()));
+    public CotizacionProductosDTO crearCotizacionProductos(CotizacionProductosCreateDTO dto, Long usuarioId) {
+        Empresa cliente = empresaRepository.findByIdAndUsuarioId(dto.getClienteId(), usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + dto.getClienteId()));
+        Empresa vendedor = empresaRepository.findByIdAndUsuarioId(dto.getVendedorId(), usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendedor no encontrado con ID: " + dto.getVendedorId()));
 
         CotizacionProductos cotizacion = new CotizacionProductos();
+        cotizacion.setUsuarioId(usuarioId); // Asignar el dueño
         cotizacion.setCliente(cliente);
         cotizacion.setVendedor(vendedor);
         cotizacion.setVigencia(dto.getVigencia());
@@ -74,9 +84,12 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setFolio(generarFolioUnico());
         cotizacion.setFechaEmision(LocalDate.now());
         cotizacion.setEstatus(dto.getEstatus());
+        cotizacion.setAplicarIva(dto.isAplicarIva());
+        cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
         List<LineaCotizacionProducto> lineas = dto.getLineas().stream().map(lineaDto -> {
-            Producto producto = productoRepository.findById(lineaDto.getProductoId()).orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
+            Producto producto = productoRepository.findByIdAndUsuarioId(lineaDto.getProductoId(), usuarioId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
             LineaCotizacionProducto linea = new LineaCotizacionProducto();
             linea.setProducto(producto);
             linea.setCantidad(lineaDto.getCantidad());
@@ -91,14 +104,14 @@ public class CotizacionServiceImpl implements CotizacionService {
         return mapToProductosDTO(cotizacionRepository.save(cotizacion));
     }
 
-    // **** INICIO DE LA CORRECCIÓN ****
     @Override
     @Transactional
-    public CotizacionServiciosDTO actualizarCotizacionServicios(Long id, CotizacionServiciosCreateDTO dto) {
-        CotizacionServicios cotizacion = (CotizacionServicios) cotizacionRepository.findById(id).filter(c -> c instanceof CotizacionServicios).orElseThrow(() -> new ResourceNotFoundException("Cotización de servicios no encontrada con ID: " + id));
+    public CotizacionServiciosDTO actualizarCotizacionServicios(Long id, CotizacionServiciosCreateDTO dto, Long usuarioId) {
+        CotizacionServicios cotizacion = (CotizacionServicios) cotizacionRepository.findByIdAndUsuarioId(id, usuarioId)
+                .filter(c -> c instanceof CotizacionServicios)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización de servicios no encontrada con ID: " + id));
 
-        // ACTUALIZACIÓN COMPLETA DE CAMPOS
-        cotizacion.setEstatus(dto.getEstatus()); // <--- LA LÍNEA CRÍTICA QUE FALTABA
+        cotizacion.setEstatus(dto.getEstatus());
         cotizacion.setVigencia(dto.getVigencia());
         cotizacion.setDescripcionGeneral(dto.getDescripcionGeneral());
         cotizacion.setFormaPago(dto.getFormaPago());
@@ -126,11 +139,12 @@ public class CotizacionServiceImpl implements CotizacionService {
 
     @Override
     @Transactional
-    public CotizacionProductosDTO actualizarCotizacionProductos(Long id, CotizacionProductosCreateDTO dto) {
-        CotizacionProductos cotizacion = (CotizacionProductos) cotizacionRepository.findById(id).filter(c -> c instanceof CotizacionProductos).orElseThrow(() -> new ResourceNotFoundException("Cotización de productos no encontrada con ID: " + id));
+    public CotizacionProductosDTO actualizarCotizacionProductos(Long id, CotizacionProductosCreateDTO dto, Long usuarioId) {
+        CotizacionProductos cotizacion = (CotizacionProductos) cotizacionRepository.findByIdAndUsuarioId(id, usuarioId)
+                .filter(c -> c instanceof CotizacionProductos)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización de productos no encontrada con ID: " + id));
 
-        // ACTUALIZACIÓN COMPLETA DE CAMPOS
-        cotizacion.setEstatus(dto.getEstatus()); // <--- LA LÍNEA CRÍTICA QUE FALTABA
+        cotizacion.setEstatus(dto.getEstatus());
         cotizacion.setVigencia(dto.getVigencia());
         cotizacion.setCondicionesEntrega(dto.getCondicionesEntrega());
         cotizacion.setGarantia(dto.getGarantia());
@@ -141,7 +155,8 @@ public class CotizacionServiceImpl implements CotizacionService {
 
         cotizacion.getLineas().clear();
         List<LineaCotizacionProducto> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
-            Producto producto = productoRepository.findById(lineaDto.getProductoId()).orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
+            Producto producto = productoRepository.findByIdAndUsuarioId(lineaDto.getProductoId(), usuarioId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
             LineaCotizacionProducto linea = new LineaCotizacionProducto();
             linea.setProducto(producto);
             linea.setCantidad(lineaDto.getCantidad());
@@ -155,12 +170,12 @@ public class CotizacionServiceImpl implements CotizacionService {
 
         return mapToProductosDTO(cotizacionRepository.save(cotizacion));
     }
-    // **** FIN DE LA CORRECCIÓN ****
 
     @Override
     @Transactional(readOnly = true)
-    public Object findCotizacionById(Long id) {
-        Cotizacion cotizacion = cotizacionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + id));
+    public Object findCotizacionByIdAndUsuarioId(Long id, Long usuarioId) {
+        Cotizacion cotizacion = cotizacionRepository.findByIdAndUsuarioId(id, usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + id));
         if (cotizacion instanceof CotizacionServicios) {
             return mapToServiciosDTO((CotizacionServicios) cotizacion);
         } else if (cotizacion instanceof CotizacionProductos) {
@@ -171,8 +186,8 @@ public class CotizacionServiceImpl implements CotizacionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Object> findAllCotizaciones() {
-        return cotizacionRepository.findAll().stream().map(cotizacion -> {
+    public List<Object> findAllCotizacionesByUsuarioId(Long usuarioId) {
+        return cotizacionRepository.findAllByUsuarioId(usuarioId).stream().map(cotizacion -> {
             if (cotizacion instanceof CotizacionServicios) {
                 return mapToServiciosDTO((CotizacionServicios) cotizacion);
             } else if (cotizacion instanceof CotizacionProductos) {
@@ -187,9 +202,6 @@ public class CotizacionServiceImpl implements CotizacionService {
     }
 
     private EmpresaDTO mapToEmpresaDTO(Empresa empresa) {
-        if (empresa == null) {
-            return null;
-        }
         EmpresaDTO dto = new EmpresaDTO();
         dto.setId(empresa.getId());
         dto.setNombreEmpresa(empresa.getNombreEmpresa());
@@ -220,7 +232,6 @@ public class CotizacionServiceImpl implements CotizacionService {
         dto.setAplicarIva(cotizacion.isAplicarIva());
         dto.setPorcentajeIva(cotizacion.getPorcentajeIva());
 
-
         if (cotizacion.getLineas() != null) {
             List<LineaCotizacionServicioDTO> lineasDTO = cotizacion.getLineas().stream().map(linea -> {
                 LineaCotizacionServicioDTO lineaDTO = new LineaCotizacionServicioDTO();
@@ -234,7 +245,6 @@ public class CotizacionServiceImpl implements CotizacionService {
             }).collect(Collectors.toList());
             dto.setLineas(lineasDTO);
 
-            // **** INICIO DE LA CORRECCIÓN DE CÁLCULO ****
             BigDecimal subtotal = lineasDTO.stream()
                     .map(LineaCotizacionServicioDTO::getSubtotal)
                     .filter(java.util.Objects::nonNull)
@@ -246,8 +256,6 @@ public class CotizacionServiceImpl implements CotizacionService {
             } else {
                 dto.setTotal(subtotal);
             }
-            // **** FIN DE LA CORRECCIÓN DE CÁLCULO ****
-
         }
         return dto;
     }
@@ -284,7 +292,6 @@ public class CotizacionServiceImpl implements CotizacionService {
             }).collect(Collectors.toList());
             dto.setLineas(lineasDTO);
 
-            // **** INICIO DE LA CORRECCIÓN DE CÁLCULO ****
             BigDecimal subtotal = lineasDTO.stream()
                     .map(LineaCotizacionProductoDTO::getSubtotal)
                     .filter(java.util.Objects::nonNull)
@@ -296,7 +303,6 @@ public class CotizacionServiceImpl implements CotizacionService {
             } else {
                 dto.setTotal(subtotal);
             }
-            // **** FIN DE LA CORRECCIÓN DE CÁLCULO ****
         }
         return dto;
     }

@@ -25,43 +25,41 @@ import java.util.Objects;
 public class PdfGenerationServiceImpl implements PdfGenerationService {
 
     private final CotizacionService cotizacionService;
-    private final EmpresaRepository empresaRepository; // Asegúrate de que esta inyección esté
+    private final EmpresaRepository empresaRepository;
     private final TemplateEngine templateEngine;
 
     @Override
-    public byte[] generarPdfCotizacion(Long cotizacionId) throws Exception {
-        Object cotizacionDto = cotizacionService.findCotizacionById(cotizacionId);
+    public byte[] generarPdfCotizacion(Long cotizacionId, Long usuarioId) throws Exception {
+        // --- CAMBIO CLAVE: Llama al nuevo método del servicio que verifica al usuario ---
+        Object cotizacionDto = cotizacionService.findCotizacionByIdAndUsuarioId(cotizacionId, usuarioId);
 
         Context context = new Context();
         context.setVariable("cotizacion", cotizacionDto);
 
-        // 1. Obtener y codificar el logo de "Mi Empresa" en Base64
-        String logoBase64 = getMiEmpresaLogoBase64();
+        // --- CAMBIO CLAVE: El logo ahora debe ser el del usuario específico ---
+        String logoBase64 = getMiEmpresaLogoBase64(usuarioId);
         context.setVariable("logoBase64", logoBase64);
 
-        // 2. Calcular totales para la plantilla
+        // El resto de la lógica para calcular totales no cambia
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal porcentajeIva = BigDecimal.ZERO;
         boolean aplicarIva = false;
 
-        if (cotizacionDto instanceof CotizacionServiciosDTO) {
-            CotizacionServiciosDTO dto = (CotizacionServiciosDTO) cotizacionDto;
+        if (cotizacionDto instanceof CotizacionServiciosDTO dto) {
             subtotal = dto.getLineas().stream()
                     .map(LineaCotizacionServicioDTO::getSubtotal)
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             porcentajeIva = dto.getPorcentajeIva();
             aplicarIva = dto.isAplicarIva();
-
-    } else if (cotizacionDto instanceof CotizacionProductosDTO) {
-        CotizacionProductosDTO dto = (CotizacionProductosDTO) cotizacionDto;
-        subtotal = dto.getLineas().stream()
-                .map(LineaCotizacionProductoDTO::getSubtotal)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        porcentajeIva = dto.getPorcentajeIva();
-        aplicarIva = dto.isAplicarIva();
-    }
+        } else if (cotizacionDto instanceof CotizacionProductosDTO dto) {
+            subtotal = dto.getLineas().stream()
+                    .map(LineaCotizacionProductoDTO::getSubtotal)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            porcentajeIva = dto.getPorcentajeIva();
+            aplicarIva = dto.isAplicarIva();
+        }
 
         BigDecimal iva = aplicarIva ? subtotal.multiply(porcentajeIva) : BigDecimal.ZERO;
         BigDecimal totalConIva = subtotal.add(iva);
@@ -69,7 +67,6 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         context.setVariable("subtotal", subtotal);
         context.setVariable("iva", iva);
         context.setVariable("totalConIva", totalConIva);
-
 
         String htmlContent = templateEngine.process("pdf/pdf_template_cotizacion", context);
 
@@ -85,11 +82,12 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         return outputStream.toByteArray();
     }
 
-    private String getMiEmpresaLogoBase64() {
-        return empresaRepository.findByEsMiEmpresa(true)
+    private String getMiEmpresaLogoBase64(Long usuarioId) {
+        // --- CAMBIO CLAVE: Busca "Mi Empresa" del usuario que solicita el PDF ---
+        return empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId)
                 .map(Empresa::getLogo)
                 .filter(logoBytes -> logoBytes != null && logoBytes.length > 0)
                 .map(logoBytes -> "data:image/png;base64," + Base64.getEncoder().encodeToString(logoBytes))
-                .orElse(""); // Devuelve una cadena vacía si no hay logo
+                .orElse("");
     }
 }

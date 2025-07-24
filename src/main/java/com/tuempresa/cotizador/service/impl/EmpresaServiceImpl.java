@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class EmpresaServiceImpl implements EmpresaService {
@@ -21,38 +22,38 @@ public class EmpresaServiceImpl implements EmpresaService {
     private static final long MAX_LOGO_SIZE = 3 * 1024 * 1024; // 3 MB
 
     @Override
-    public Empresa guardarEmpresa(Empresa empresa) {
-        // MODIFICADO: Toda la lógica del logo ha sido eliminada.
-        // La propiedad 'esMiEmpresa' por defecto es 'false', así que se guarda como cliente correctamente.
+    public Empresa guardarEmpresa(Empresa empresa, Long usuarioId) {
+        empresa.setUsuarioId(usuarioId);
         return empresaRepository.save(empresa);
     }
 
     @Override
-    public Optional<Empresa> findById(Long id) {
-        return empresaRepository.findById(id);
+    public Optional<Empresa> findByIdAndUsuarioId(Long id, Long usuarioId) {
+        return empresaRepository.findByIdAndUsuarioId(id, usuarioId);
     }
 
     @Override
-    public List<Empresa> findAll() {
-        return empresaRepository.findAll();
+    public List<Empresa> findAllByUsuarioId(Long usuarioId) {
+        return empresaRepository.findAllByUsuarioId(usuarioId);
     }
 
     @Override
-    public Optional<Empresa> findMiEmpresa() {
-        return empresaRepository.findByEsMiEmpresa(true);
+    public Optional<Empresa> findMiEmpresaByUsuarioId(Long usuarioId) {
+        return empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId);
     }
 
     @Override
-    public List<Empresa> findClientes() {
-        return empresaRepository.findAllByEsMiEmpresa(false);
+    public List<Empresa> findClientesByUsuarioId(Long usuarioId) {
+        return empresaRepository.findAllByEsMiEmpresaAndUsuarioId(false, usuarioId);
     }
 
     @Override
     @Transactional
-    public Empresa guardarMiEmpresa(Empresa empresaDataFromForm, MultipartFile logoFile) throws IOException {
-        Empresa miEmpresaToSave = empresaRepository.findByEsMiEmpresa(true)
+    public Empresa guardarMiEmpresa(Empresa empresaDataFromForm, MultipartFile logoFile, Long usuarioId) throws IOException {
+        Empresa miEmpresaToSave = empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId)
                 .orElse(new Empresa());
 
+        miEmpresaToSave.setUsuarioId(usuarioId);
         miEmpresaToSave.setNombreEmpresa(empresaDataFromForm.getNombreEmpresa());
         miEmpresaToSave.setNombreContacto(empresaDataFromForm.getNombreContacto());
         miEmpresaToSave.setCorreo(empresaDataFromForm.getCorreo());
@@ -74,10 +75,8 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     @Override
     @Transactional
-    public void eliminarLogoMiEmpresa() {
-        // Busca "Mi Empresa"
-        empresaRepository.findByEsMiEmpresa(true).ifPresent(miEmpresa -> {
-            // Si la encuentra, pone el logo a null y guarda los cambios
+    public void eliminarLogoMiEmpresa(Long usuarioId) {
+        empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId).ifPresent(miEmpresa -> {
             miEmpresa.setLogo(null);
             empresaRepository.save(miEmpresa);
         });
