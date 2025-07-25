@@ -1,8 +1,9 @@
 package com.tuempresa.cotizador.web.controller;
 
 import com.tuempresa.cotizador.model.Producto;
-
+import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.service.ProductoService;
+import com.tuempresa.cotizador.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -15,17 +16,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class ProductoController {
 
-    // --- CAMBIO: Inyecta el servicio en lugar del repositorio ---
     private final ProductoService productoService;
+    private final UsuarioService usuarioService;
 
-    // TODO: Usar el método real una vez implementada la seguridad
-    private Long getAuthenticatedUserId(Authentication authentication) {
-        return 1L; // Stub temporal
+
+
+
+    private Long getUsuarioId(Authentication authentication) {
+        String userEmail = authentication.getName();
+        return usuarioService.findByEmail(userEmail)
+                .map(User::getId)
+                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado para el email: " + userEmail));
     }
 
     @GetMapping
     public String listarProductos(Model model, Authentication authentication) {
-        Long usuarioId = getAuthenticatedUserId(authentication);
+
+        Long usuarioId = getUsuarioId(authentication);
         model.addAttribute("productos", productoService.findAllByUsuarioId(usuarioId));
         return "productos/lista-productos";
     }
@@ -39,7 +46,8 @@ public class ProductoController {
 
     @PostMapping("/guardar")
     public String guardarProducto(@ModelAttribute Producto producto, Authentication authentication, RedirectAttributes redirectAttributes) {
-        Long usuarioId = getAuthenticatedUserId(authentication);
+
+        Long usuarioId = getUsuarioId(authentication);
         productoService.guardarProducto(producto, usuarioId);
         redirectAttributes.addFlashAttribute("successMessage", "Producto guardado correctamente.");
         return "redirect:/productos";
@@ -47,7 +55,8 @@ public class ProductoController {
 
     @GetMapping("/editar/{id}")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
-        Long usuarioId = getAuthenticatedUserId(authentication);
+
+        Long usuarioId = getUsuarioId(authentication);
         return productoService.findByIdAndUsuarioId(id, usuarioId)
                 .map(producto -> {
                     model.addAttribute("producto", producto);
@@ -62,7 +71,8 @@ public class ProductoController {
 
     @GetMapping("/eliminar/{id}")
     public String eliminarProducto(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
-        Long usuarioId = getAuthenticatedUserId(authentication);
+
+        Long usuarioId = getUsuarioId(authentication);
         try {
             productoService.eliminarProducto(id, usuarioId);
             redirectAttributes.addFlashAttribute("successMessage", "Producto eliminado correctamente.");

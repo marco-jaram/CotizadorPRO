@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header}">
+    <title>Iniciar Sesión</title>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3>Iniciar Sesión</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Mensaje de error de login -->
+                    <div th:if="${param.error}" class="alert alert-danger">
+                        Correo o contraseña incorrectos.
+                    </div>
+                    <!-- Mensaje de logout exitoso -->
+                    <div th:if="${param.logout}" class="alert alert-success">
+                        Has cerrado sesión exitosamente.
+                    </div>
+                    <!-- Mensaje de registro exitoso -->
+                    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="username" name="username" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Entrar</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>¿No tienes una cuenta? <a th:href="@{/registro}">Regístrate aquí</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

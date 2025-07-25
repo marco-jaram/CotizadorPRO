@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <!-- Fragmento de la Barra de Navegación -->
@@ -10,14 +10,11 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/}"><i class="bi bi-house-door-fill"></i> Inicio</a>
-                </li>
+            <!-- Menú principal, solo visible si está autenticado -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0" sec:authorize="isAuthenticated()">
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/cotizaciones}"><i class="bi bi-files"></i> Cotizaciones</a>
                 </li>
-                <!-- AÑADIDO: Enlace al catálogo de productos -->
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/productos}"><i class="bi bi-collection-fill"></i> Productos</a>
                 </li>
@@ -25,16 +22,38 @@
                     <a class="nav-link" th:href="@{/empresas}"><i class="bi bi-people-fill"></i> Clientes</a>
                 </li>
             </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/empresas/mi-empresa}"><i class="bi bi-building-fill-gear"></i> Mi Empresa</a>
+
+            <!-- Menú de la derecha -->
+            <ul class="navbar-nav ms-auto">
+                <!-- Si el usuario está autenticado, muestra su nombre y el botón de logout -->
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-fill"></i>
+                        <span sec:authentication="name">nombre.usuario@email.com</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" th:href="@{/empresas/mi-empresa}"><i class="bi bi-building-fill-gear"></i> Mi Empresa</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Si no está autenticado, muestra el botón de login -->
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" th:href="@{/login}"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- ... (resto del archivo del footer sin cambios) ... -->
+<!-- Fragmento del Footer (sin cambios) -->
 <footer th:fragment="footer" class="bg-light text-center text-lg-start mt-5">
     <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
         © 2025 Cotizador Pro - Creado por <a href="https://marco-jaram.dev/">Marco Jaramillo</a>
