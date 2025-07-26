@@ -6,6 +6,7 @@ import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
 import com.tuempresa.cotizador.service.*;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
+import java.io.ByteArrayInputStream;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
@@ -26,6 +29,7 @@ public class CotizacionController {
     private final EmpresaService empresaService;
     private final ProductoService productoService;
     private final PdfGenerationService pdfGenerationService;
+    private final ExcelGenerationService excelGenerationService;
 
     private void addCommonAttributesToModel(Model model) {
         Empresa miEmpresa = empresaService.findMiEmpresaByUser().orElse(new Empresa());
@@ -185,5 +189,23 @@ public class CotizacionController {
     public String actualizarCotizacionProductos(@PathVariable Long id, @ModelAttribute CotizacionProductosCreateDTO dto) {
         cotizacionService.actualizarCotizacionProductos(id, dto);
         return "redirect:/cotizaciones/" + id;
+    }
+    @GetMapping("/exportar/excel")
+    public ResponseEntity<InputStreamResource> exportarCotizacionesAExcel() {
+        // 1. Obtener los datos (reutilizamos el método existente)
+        List<Object> cotizaciones = cotizacionService.findAllByUser();
+
+        // 2. Generar el archivo Excel en memoria
+        ByteArrayInputStream in = excelGenerationService.generarExcelCotizaciones(cotizaciones);
+
+        // 3. Preparar la respuesta HTTP para la descarga
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=cotizaciones.xlsx");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 }
