@@ -1,5 +1,5 @@
 package com.tuempresa.cotizador.service;
 
 public interface PdfGenerationService {
-    byte[] generarPdfCotizacion(Long cotizacionId, Long usuarioId) throws Exception;
+    byte[] generarPdfCotizacion(Long cotizacionId) throws Exception;
 }

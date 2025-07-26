@@ -1,13 +1,12 @@
-
 package com.tuempresa.cotizador.service.impl;
 
 import com.tuempresa.cotizador.model.Empresa;
 import com.tuempresa.cotizador.repository.EmpresaRepository;
+import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.service.EmpresaService;
-
+import com.tuempresa.cotizador.service.UsuarioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -19,41 +18,49 @@ import java.util.Optional;
 public class EmpresaServiceImpl implements EmpresaService {
 
     private final EmpresaRepository empresaRepository;
-    private static final long MAX_LOGO_SIZE = 3 * 1024 * 1024; // 3 MB
+    private final UsuarioService usuarioService; // <-- Inyección clave
+    private static final long MAX_LOGO_SIZE = 3 * 1024 * 1024;
 
     @Override
-    public Empresa guardarEmpresa(Empresa empresa, Long usuarioId) {
-        empresa.setUsuarioId(usuarioId);
+    public Empresa guardarEmpresa(Empresa empresa) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        empresa.setUser(usuarioActual); // Asigna el dueño
         return empresaRepository.save(empresa);
     }
 
     @Override
-    public Optional<Empresa> findByIdAndUsuarioId(Long id, Long usuarioId) {
-        return empresaRepository.findByIdAndUsuarioId(id, usuarioId);
+    public Optional<Empresa> findById(Long id) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return empresaRepository.findByIdAndUser(id, usuarioActual);
     }
 
     @Override
-    public List<Empresa> findAllByUsuarioId(Long usuarioId) {
-        return empresaRepository.findAllByUsuarioId(usuarioId);
+    public List<Empresa> findAllByUser() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return empresaRepository.findAllByUser(usuarioActual);
     }
 
     @Override
-    public Optional<Empresa> findMiEmpresaByUsuarioId(Long usuarioId) {
-        return empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId);
+    public Optional<Empresa> findMiEmpresaByUser() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return empresaRepository.findByEsMiEmpresaAndUser(true, usuarioActual);
     }
 
     @Override
-    public List<Empresa> findClientesByUsuarioId(Long usuarioId) {
-        return empresaRepository.findAllByEsMiEmpresaAndUsuarioId(false, usuarioId);
+    public List<Empresa> findClientesByUser() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return empresaRepository.findAllByEsMiEmpresaAndUser(false, usuarioActual);
     }
 
     @Override
     @Transactional
-    public Empresa guardarMiEmpresa(Empresa empresaDataFromForm, MultipartFile logoFile, Long usuarioId) throws IOException {
-        Empresa miEmpresaToSave = empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId)
+    public Empresa guardarMiEmpresa(Empresa empresaDataFromForm, MultipartFile logoFile) throws IOException {
+        User usuarioActual = usuarioService.getUsuarioActual();
+
+        Empresa miEmpresaToSave = empresaRepository.findByEsMiEmpresaAndUser(true, usuarioActual)
                 .orElse(new Empresa());
 
-        miEmpresaToSave.setUsuarioId(usuarioId);
+        miEmpresaToSave.setUser(usuarioActual); // Asigna el dueño
         miEmpresaToSave.setNombreEmpresa(empresaDataFromForm.getNombreEmpresa());
         miEmpresaToSave.setNombreContacto(empresaDataFromForm.getNombreContacto());
         miEmpresaToSave.setCorreo(empresaDataFromForm.getCorreo());
@@ -67,6 +74,8 @@ public class EmpresaServiceImpl implements EmpresaService {
             if (logoFile.getSize() > MAX_LOGO_SIZE) {
                 throw new IOException("El archivo del logo no debe exceder los 3MB.");
             }
+            // Si el logo está vacío pero ya existe uno, no lo borres.
+            // Solo actualiza si se sube un nuevo archivo.
             miEmpresaToSave.setLogo(logoFile.getBytes());
         }
 
@@ -75,8 +84,9 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     @Override
     @Transactional
-    public void eliminarLogoMiEmpresa(Long usuarioId) {
-        empresaRepository.findByEsMiEmpresaAndUsuarioId(true, usuarioId).ifPresent(miEmpresa -> {
+    public void eliminarLogoMiEmpresa() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        empresaRepository.findByEsMiEmpresaAndUser(true, usuarioActual).ifPresent(miEmpresa -> {
             miEmpresa.setLogo(null);
             empresaRepository.save(miEmpresa);
         });

@@ -1,10 +1,9 @@
-// src/main/java/com/tuempresa/cotizador/model/Cotizacion.java
 package com.tuempresa.cotizador.model;
 
 import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
+import com.tuempresa.cotizador.security.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -32,9 +31,6 @@ public abstract class Cotizacion {
     @Column(name = "porcentaje_iva")
     private BigDecimal porcentajeIva = new BigDecimal("0.16");
 
-    @Column(name = "usuario_id", nullable = false)
-    private Long usuarioId;
-
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
     private Empresa cliente;
@@ -43,4 +39,7 @@ public abstract class Cotizacion {
     @JoinColumn(name = "vendedor_id", nullable = false)
     private Empresa vendedor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

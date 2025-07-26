@@ -1,23 +1,22 @@
 package com.tuempresa.cotizador.web.controller;
 
+import com.tuempresa.cotizador.exception.ResourceNotFoundException;
 import com.tuempresa.cotizador.model.Empresa;
 import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
-import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.service.*;
-import com.tuempresa.cotizador.service.UsuarioService;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/cotizaciones")
@@ -28,106 +27,82 @@ public class CotizacionController {
     private final EmpresaService empresaService;
     private final ProductoService productoService;
     private final PdfGenerationService pdfGenerationService;
-    private final UsuarioService usuarioService; // <-- CAMBIO: Inyectar UsuarioService
 
-
-    private Long getUsuarioId(Authentication authentication) {
-        String userEmail = authentication.getName();
-        return usuarioService.findByEmail(userEmail)
-                .map(User::getId)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado para el email: " + userEmail));
-    }
-
-    private void addCommonAttributesToModel(Model model, Long usuarioId) {
-        Empresa miEmpresa = empresaService.findMiEmpresaByUsuarioId(usuarioId)
-                .orElse(new Empresa());
+    private void addCommonAttributesToModel(Model model) {
+        Empresa miEmpresa = empresaService.findMiEmpresaByUser().orElse(new Empresa());
         model.addAttribute("vendedor", miEmpresa);
-        model.addAttribute("clientes", empresaService.findClientesByUsuarioId(usuarioId));
+        model.addAttribute("clientes", empresaService.findClientesByUser());
         model.addAttribute("estatusDisponibles", EstatusCotizacion.values());
     }
 
-    @GetMapping("/servicios/nueva")
-    public String mostrarFormularioServicios(Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
+    @GetMapping
+    public String listarCotizaciones(Model model) {
+        model.addAttribute("cotizaciones", cotizacionService.findAllByUser());
+        return "cotizaciones/lista-cotizaciones";
+    }
 
-        Long usuarioId = getUsuarioId(authentication);
-        if (empresaService.findMiEmpresaByUsuarioId(usuarioId).isEmpty()) {
+    @GetMapping("/servicios/nueva")
+    public String mostrarFormularioServicios(Model model, RedirectAttributes redirectAttributes) {
+        if (empresaService.findMiEmpresaByUser().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "¡Acción requerida! Debe configurar 'Mi Empresa' antes de poder crear una cotización.");
             return "redirect:/empresas/mi-empresa";
         }
-        addCommonAttributesToModel(model, usuarioId);
+        addCommonAttributesToModel(model);
         model.addAttribute("cotizacion", new CotizacionServiciosCreateDTO());
         return "cotizaciones/form-servicios";
     }
 
     @PostMapping("/servicios")
-    public String crearCotizacionServicios(@ModelAttribute CotizacionServiciosCreateDTO dto, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        Empresa miEmpresa = empresaService.findMiEmpresaByUsuarioId(usuarioId).orElseThrow(() -> new IllegalStateException("No se encontró 'Mi Empresa' al guardar."));
+    public String crearCotizacionServicios(@ModelAttribute CotizacionServiciosCreateDTO dto) {
+        Empresa miEmpresa = empresaService.findMiEmpresaByUser().orElseThrow(() -> new IllegalStateException("No se encontró 'Mi Empresa' al guardar."));
         dto.setVendedorId(miEmpresa.getId());
-        CotizacionServiciosDTO nuevaCotizacion = cotizacionService.crearCotizacionServicios(dto, usuarioId);
+        CotizacionServiciosDTO nuevaCotizacion = cotizacionService.crearCotizacionServicios(dto);
         return "redirect:/cotizaciones/" + nuevaCotizacion.getId();
     }
 
     @GetMapping("/productos/nueva")
-    public String mostrarFormularioProductos(Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        if (empresaService.findMiEmpresaByUsuarioId(usuarioId).isEmpty()) {
+    public String mostrarFormularioProductos(Model model, RedirectAttributes redirectAttributes) {
+        if (empresaService.findMiEmpresaByUser().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "¡Acción requerida! Debe configurar 'Mi Empresa' antes de poder crear una cotización.");
             return "redirect:/empresas/mi-empresa";
         }
-        addCommonAttributesToModel(model, usuarioId);
-        model.addAttribute("productos", productoService.findAllByUsuarioId(usuarioId));
+        addCommonAttributesToModel(model);
+        model.addAttribute("productos", productoService.findAllByUser());
         model.addAttribute("cotizacion", new CotizacionProductosCreateDTO());
         return "cotizaciones/form-productos";
     }
 
     @PostMapping("/productos")
-    public String crearCotizacionProductos(@ModelAttribute CotizacionProductosCreateDTO dto, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        Empresa miEmpresa = empresaService.findMiEmpresaByUsuarioId(usuarioId).orElseThrow(() -> new IllegalStateException("No se encontró 'Mi Empresa' al guardar."));
+    public String crearCotizacionProductos(@ModelAttribute CotizacionProductosCreateDTO dto) {
+        Empresa miEmpresa = empresaService.findMiEmpresaByUser().orElseThrow(() -> new IllegalStateException("No se encontró 'Mi Empresa' al guardar."));
         dto.setVendedorId(miEmpresa.getId());
-        CotizacionProductosDTO nuevaCotizacion = cotizacionService.crearCotizacionProductos(dto, usuarioId);
+        CotizacionProductosDTO nuevaCotizacion = cotizacionService.crearCotizacionProductos(dto);
         return "redirect:/cotizaciones/" + nuevaCotizacion.getId();
     }
 
     @GetMapping("/{id}")
-    public String verDetalleCotizacion(@PathVariable Long id, Model model, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        Object cotizacionDto = cotizacionService.findCotizacionByIdAndUsuarioId(id, usuarioId);
-        model.addAttribute("cotizacion", cotizacionDto);
-        return "cotizaciones/detalle";
+    public String verDetalleCotizacion(@PathVariable Long id, Model model) {
+        try {
+            Object cotizacionDto = cotizacionService.findById(id);
+            model.addAttribute("cotizacion", cotizacionDto);
+            return "cotizaciones/detalle";
+        } catch (ResourceNotFoundException e) {
+            return "redirect:/cotizaciones";
+        }
     }
 
     @GetMapping("/{id}/pdf")
-    public ResponseEntity<byte[]> descargarPdfCotizacion(@PathVariable Long id, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
+    public ResponseEntity<byte[]> descargarPdfCotizacion(@PathVariable Long id) {
         try {
-            Object cotizacionDto = cotizacionService.findCotizacionByIdAndUsuarioId(id, usuarioId);
-            String folio = "";
-            String tipo = "";
-            if (cotizacionDto instanceof CotizacionServiciosDTO) {
-                folio = ((CotizacionServiciosDTO) cotizacionDto).getFolio();
-                tipo = "Servicios";
-            } else if (cotizacionDto instanceof CotizacionProductosDTO) {
-                folio = ((CotizacionProductosDTO) cotizacionDto).getFolio();
-                tipo = "Productos";
-            }
-
-            byte[] pdfBytes = pdfGenerationService.generarPdfCotizacion(id, usuarioId);
+            byte[] pdfBytes = pdfGenerationService.generarPdfCotizacion(id);
+            Object cotizacionDto = cotizacionService.findById(id);
+            String folio = "", tipo = "";
+            if (cotizacionDto instanceof CotizacionServiciosDTO c) { folio = c.getFolio(); tipo = "Servicios"; }
+            else if (cotizacionDto instanceof CotizacionProductosDTO c) { folio = c.getFolio(); tipo = "Productos"; }
             String filename = "Cotizacion-" + tipo + "-" + folio + ".pdf";
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("inline", filename);
-            headers.setCacheControl("no-cache, no-store, must-revalidate");
-            headers.setPragma("no-cache");
-            headers.setExpires(0);
-
             return ResponseEntity.ok().headers(headers).body(pdfBytes);
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,120 +110,81 @@ public class CotizacionController {
         }
     }
 
-    @GetMapping
-    public String listarCotizaciones(Model model, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        List<Object> cotizaciones = cotizacionService.findAllCotizacionesByUsuarioId(usuarioId);
-        model.addAttribute("cotizaciones", cotizaciones);
-        return "cotizaciones/lista-cotizaciones";
-    }
-
     @GetMapping("/{id}/editar")
-    public String mostrarFormularioEdicion(@PathVariable Long id, Model model, Authentication authentication) {
-        Long usuarioId = getUsuarioId(authentication);
-        Object cotizacionDto = cotizacionService.findCotizacionByIdAndUsuarioId(id, usuarioId);
+    public String mostrarFormularioEdicion(@PathVariable Long id, Model model) {
+        try {
+            Object cotizacionDto = cotizacionService.findById(id);
+            addCommonAttributesToModel(model);
 
-        // CASO 1: LA COTIZACIÓN ES DE SERVICIOS
-        if (cotizacionDto instanceof CotizacionServiciosDTO dto) {
-            // Obtenemos los atributos comunes para el formulario
-            addCommonAttributesToModel(model, usuarioId);
+            if (cotizacionDto instanceof CotizacionServiciosDTO dto) {
+                CotizacionServiciosCreateDTO createDto = new CotizacionServiciosCreateDTO();
+                createDto.setClienteId(dto.getCliente().getId());
+                createDto.setVendedorId(dto.getVendedor().getId());
+                createDto.setEstatus(dto.getEstatus());
+                createDto.setVigencia(dto.getVigencia());
+                createDto.setDescripcionGeneral(dto.getDescripcionGeneral());
+                createDto.setFormaPago(dto.getFormaPago());
+                createDto.setMetodosAceptados(dto.getMetodosAceptados());
+                createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
+                createDto.setTiempoRespuesta(dto.getTiempoRespuesta());
+                createDto.setAplicarIva(dto.isAplicarIva());
+                createDto.setPorcentajeIva(dto.getPorcentajeIva());
+                if (dto.getLineas() != null) {
+                    createDto.setLineas(dto.getLineas().stream().map(lineaDto -> {
+                        LineaCotizacionServicioCreateDTO lineaCreate = new LineaCotizacionServicioCreateDTO();
+                        lineaCreate.setConcepto(lineaDto.getConcepto());
+                        lineaCreate.setCantidad(lineaDto.getCantidad());
+                        lineaCreate.setUnidad(lineaDto.getUnidad());
+                        lineaCreate.setPrecioUnitario(lineaDto.getPrecioUnitario());
+                        return lineaCreate;
+                    }).collect(Collectors.toList()));
+                }
+                model.addAttribute("cotizacion", createDto);
+                model.addAttribute("cotizacionId", id);
+                return "cotizaciones/form-servicios";
 
-            // Creamos el objeto que espera el formulario (CreateDTO)
-            CotizacionServiciosCreateDTO createDto = new CotizacionServiciosCreateDTO();
-
-
-
-            createDto.setClienteId(dto.getCliente().getId());
-            createDto.setVendedorId(dto.getVendedor().getId());
-            createDto.setEstatus(dto.getEstatus());
-            createDto.setVigencia(dto.getVigencia());
-            createDto.setDescripcionGeneral(dto.getDescripcionGeneral());
-            createDto.setFormaPago(dto.getFormaPago());
-            createDto.setMetodosAceptados(dto.getMetodosAceptados());
-            createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
-            createDto.setTiempoRespuesta(dto.getTiempoRespuesta());
-            createDto.setAplicarIva(dto.isAplicarIva());
-            createDto.setPorcentajeIva(dto.getPorcentajeIva());
-
-
-            if (dto.getLineas() != null) {
-                List<LineaCotizacionServicioCreateDTO> lineasCreateDto = dto.getLineas().stream().map(lineaDto -> {
-                    LineaCotizacionServicioCreateDTO lineaCreate = new LineaCotizacionServicioCreateDTO();
-                    lineaCreate.setConcepto(lineaDto.getConcepto());
-                    lineaCreate.setCantidad(lineaDto.getCantidad());
-                    lineaCreate.setUnidad(lineaDto.getUnidad());
-                    lineaCreate.setPrecioUnitario(lineaDto.getPrecioUnitario());
-                    return lineaCreate;
-                }).collect(java.util.stream.Collectors.toList());
-                createDto.setLineas(lineasCreateDto);
+            } else if (cotizacionDto instanceof CotizacionProductosDTO dto) {
+                CotizacionProductosCreateDTO createDto = new CotizacionProductosCreateDTO();
+                createDto.setClienteId(dto.getCliente().getId());
+                createDto.setVendedorId(dto.getVendedor().getId());
+                createDto.setEstatus(dto.getEstatus());
+                createDto.setVigencia(dto.getVigencia());
+                createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
+                createDto.setGarantia(dto.getGarantia());
+                createDto.setPoliticaDevoluciones(dto.getPoliticaDevoluciones());
+                createDto.setFormasPago(dto.getFormasPago());
+                createDto.setAplicarIva(dto.isAplicarIva());
+                createDto.setPorcentajeIva(dto.getPorcentajeIva());
+                if (dto.getLineas() != null) {
+                    createDto.setLineas(dto.getLineas().stream().map(lineaDto -> {
+                        LineaCotizacionProductoCreateDTO lineaCreate = new LineaCotizacionProductoCreateDTO();
+                        lineaCreate.setProductoId(lineaDto.getProductoId());
+                        lineaCreate.setCantidad(lineaDto.getCantidad());
+                        lineaCreate.setUnidad(lineaDto.getUnidad());
+                        lineaCreate.setPrecioUnitario(lineaDto.getPrecioUnitario());
+                        return lineaCreate;
+                    }).collect(Collectors.toList()));
+                }
+                model.addAttribute("cotizacion", createDto);
+                model.addAttribute("cotizacionId", id);
+                model.addAttribute("productos", productoService.findAllByUser());
+                return "cotizaciones/form-productos";
             }
-
-
-            // Pasamos los datos al modelo para que Thymeleaf los renderice
-            model.addAttribute("cotizacion", createDto);
-            model.addAttribute("cotizacionId", id);
-            return "cotizaciones/form-servicios";
-
-            // CASO 2: LA COTIZACIÓN ES DE PRODUCTOS
-        } else if (cotizacionDto instanceof CotizacionProductosDTO dto) {
-            // Obtenemos los atributos comunes para el formulario
-            addCommonAttributesToModel(model, usuarioId);
-
-            // Creamos el objeto que espera el formulario (CreateDTO)
-            CotizacionProductosCreateDTO createDto = new CotizacionProductosCreateDTO();
-
-
-            // Copiamos todos los datos del DTO de vista (dto) al DTO de creación/edición (createDto)
-            createDto.setClienteId(dto.getCliente().getId());
-            createDto.setVendedorId(dto.getVendedor().getId());
-            createDto.setEstatus(dto.getEstatus());
-            createDto.setVigencia(dto.getVigencia());
-            createDto.setCondicionesEntrega(dto.getCondicionesEntrega());
-            createDto.setGarantia(dto.getGarantia());
-            createDto.setPoliticaDevoluciones(dto.getPoliticaDevoluciones());
-            createDto.setFormasPago(dto.getFormasPago());
-            createDto.setAplicarIva(dto.isAplicarIva());
-            createDto.setPorcentajeIva(dto.getPorcentajeIva());
-
-
-            if (dto.getLineas() != null) {
-                List<LineaCotizacionProductoCreateDTO> lineasCreateDto = dto.getLineas().stream().map(lineaDto -> {
-                    LineaCotizacionProductoCreateDTO lineaCreate = new LineaCotizacionProductoCreateDTO();
-                    lineaCreate.setProductoId(lineaDto.getProductoId());
-                    lineaCreate.setCantidad(lineaDto.getCantidad());
-                    lineaCreate.setUnidad(lineaDto.getUnidad());
-                    lineaCreate.setPrecioUnitario(lineaDto.getPrecioUnitario());
-                    return lineaCreate;
-                }).collect(java.util.stream.Collectors.toList());
-                createDto.setLineas(lineasCreateDto);
-            }
-
-
-            // Pasamos los datos al modelo para que Thymeleaf los renderice
-            model.addAttribute("cotizacion", createDto);
-            model.addAttribute("cotizacionId", id); // Importante para que el form sepa que es una edición
-            model.addAttribute("productos", productoService.findAllByUsuarioId(usuarioId)); // El formulario de productos necesita la lista de productos
-            return "cotizaciones/form-productos";
+            return "redirect:/cotizaciones";
+        } catch (ResourceNotFoundException e) {
+            return "redirect:/cotizaciones";
         }
-
-        // Si por alguna razón la cotización no es de ninguno de los tipos conocidos, redirigimos
-        return "redirect:/cotizaciones";
     }
 
     @PostMapping("/servicios/{id}")
-    public String actualizarCotizacionServicios(@PathVariable Long id, @ModelAttribute CotizacionServiciosCreateDTO dto, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        cotizacionService.actualizarCotizacionServicios(id, dto, usuarioId);
+    public String actualizarCotizacionServicios(@PathVariable Long id, @ModelAttribute CotizacionServiciosCreateDTO dto) {
+        cotizacionService.actualizarCotizacionServicios(id, dto);
         return "redirect:/cotizaciones/" + id;
     }
 
     @PostMapping("/productos/{id}")
-    public String actualizarCotizacionProductos(@PathVariable Long id, @ModelAttribute CotizacionProductosCreateDTO dto, Authentication authentication) {
-
-        Long usuarioId = getUsuarioId(authentication);
-        cotizacionService.actualizarCotizacionProductos(id, dto, usuarioId);
+    public String actualizarCotizacionProductos(@PathVariable Long id, @ModelAttribute CotizacionProductosCreateDTO dto) {
+        cotizacionService.actualizarCotizacionProductos(id, dto);
         return "redirect:/cotizaciones/" + id;
     }
 }

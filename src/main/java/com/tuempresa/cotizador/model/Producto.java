@@ -1,6 +1,7 @@
 // src/main/java/com/tuempresa/cotizador/model/Producto.java
 package com.tuempresa.cotizador.model;
 
+import com.tuempresa.cotizador.security.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ public class Producto {
     private String nombre;
     private String especificaciones;
     private BigDecimal precioUnitarioBase;
-    @Column(name = "usuario_id")
-    private Long usuarioId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

@@ -9,18 +9,12 @@ import java.util.Optional;
 
 public interface EmpresaService {
 
-    Empresa guardarEmpresa(Empresa empresa, Long usuarioId);
-
-    Optional<Empresa> findByIdAndUsuarioId(Long id, Long usuarioId);
-
-    List<Empresa> findAllByUsuarioId(Long usuarioId);
-
-    Optional<Empresa> findMiEmpresaByUsuarioId(Long usuarioId);
-
-    List<Empresa> findClientesByUsuarioId(Long usuarioId);
-
-    Empresa guardarMiEmpresa(Empresa empresa, MultipartFile logoFile, Long usuarioId) throws IOException;
-
-    void eliminarLogoMiEmpresa(Long usuarioId);
+    Empresa guardarEmpresa(Empresa empresa);
+    Optional<Empresa> findById(Long id);
+    List<Empresa> findAllByUser();
+    Optional<Empresa> findMiEmpresaByUser();
+    List<Empresa> findClientesByUser();
+    Empresa guardarMiEmpresa(Empresa empresa, MultipartFile logoFile) throws IOException;
+    void eliminarLogoMiEmpresa();
 
 }

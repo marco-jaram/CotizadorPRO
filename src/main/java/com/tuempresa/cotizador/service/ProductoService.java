@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductoService {
-    List<Producto> findAllByUsuarioId(Long usuarioId);
-    Optional<Producto> findByIdAndUsuarioId(Long id, Long usuarioId);
-    Producto guardarProducto(Producto producto, Long usuarioId);
-    void eliminarProducto(Long id, Long usuarioId);
+    List<Producto> findAllByUser();
+    Optional<Producto> findById(Long id);
+    Producto guardarProducto(Producto producto);
+    void eliminarProducto(Long id);
 }

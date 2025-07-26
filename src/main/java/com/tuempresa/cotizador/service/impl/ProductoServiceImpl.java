@@ -1,9 +1,10 @@
-// Archivo: src/main/java/com/tuempresa/cotizador/service/impl/ProductoServiceImpl.java
 package com.tuempresa.cotizador.service.impl;
 
 import com.tuempresa.cotizador.model.Producto;
 import com.tuempresa.cotizador.repository.ProductoRepository;
+import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.service.ProductoService;
+import com.tuempresa.cotizador.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,30 +16,33 @@ import java.util.Optional;
 public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
+    private final UsuarioService usuarioService; // <-- Inyección clave
 
     @Override
-    public List<Producto> findAllByUsuarioId(Long usuarioId) {
-        return productoRepository.findAllByUsuarioId(usuarioId);
+    public List<Producto> findAllByUser() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return productoRepository.findAllByUser(usuarioActual);
     }
 
     @Override
-    public Optional<Producto> findByIdAndUsuarioId(Long id, Long usuarioId) {
-        return productoRepository.findByIdAndUsuarioId(id, usuarioId);
+    public Optional<Producto> findById(Long id) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return productoRepository.findByIdAndUser(id, usuarioActual);
     }
 
     @Override
-    public Producto guardarProducto(Producto producto, Long usuarioId) {
-        producto.setUsuarioId(usuarioId);
-        // Aquí podrías añadir validaciones, como verificar si el SKU ya existe para ese usuario
+    public Producto guardarProducto(Producto producto) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        producto.setUser(usuarioActual); // Asigna el dueño
         return productoRepository.save(producto);
     }
 
     @Override
-    public void eliminarProducto(Long id, Long usuarioId) {
+    public void eliminarProducto(Long id) {
+        User usuarioActual = usuarioService.getUsuarioActual();
         // Verificamos que el producto a eliminar realmente pertenezca al usuario
-        productoRepository.findByIdAndUsuarioId(id, usuarioId).ifPresent(producto -> {
+        productoRepository.findByIdAndUser(id, usuarioActual).ifPresent(producto -> {
             productoRepository.deleteById(id);
         });
-        // Si no pertenece al usuario, simplemente no hace nada (más seguro que lanzar excepción)
     }
 }
