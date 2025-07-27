@@ -1,3 +1,4 @@
+// Contenido COMPLETO para CotizacionServiceImpl.java
 package com.tuempresa.cotizador.service.impl;
 
 import com.tuempresa.cotizador.exception.ResourceNotFoundException;
@@ -10,6 +11,8 @@ import com.tuempresa.cotizador.service.CotizacionService;
 import com.tuempresa.cotizador.service.UsuarioService;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,18 +56,18 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setAplicarIva(dto.isAplicarIva());
         cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
-        List<LineaCotizacionServicio> lineas = dto.getLineas().stream().map(lineaDto -> {
-            LineaCotizacionServicio linea = new LineaCotizacionServicio();
-            linea.setConcepto(lineaDto.getConcepto());
-            linea.setCantidad(lineaDto.getCantidad());
-            linea.setUnidad(lineaDto.getUnidad());
-            linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
-            linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
-            linea.setCotizacionServicios(cotizacion);
-            return linea;
-        }).collect(Collectors.toList());
-
-        cotizacion.setLineas(lineas);
+        if (dto.getLineas() != null) {
+            cotizacion.setLineas(dto.getLineas().stream().map(lineaDto -> {
+                LineaCotizacionServicio linea = new LineaCotizacionServicio();
+                linea.setConcepto(lineaDto.getConcepto());
+                linea.setCantidad(lineaDto.getCantidad());
+                linea.setUnidad(lineaDto.getUnidad());
+                linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
+                linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
+                linea.setCotizacionServicios(cotizacion);
+                return linea;
+            }).collect(Collectors.toList()));
+        }
         return mapToServiciosDTO(cotizacionRepository.save(cotizacion));
     }
 
@@ -92,20 +95,20 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setAplicarIva(dto.isAplicarIva());
         cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
-        List<LineaCotizacionProducto> lineas = dto.getLineas().stream().map(lineaDto -> {
-            Producto producto = productoRepository.findByIdAndUser(lineaDto.getProductoId(), usuarioActual)
-                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
-            LineaCotizacionProducto linea = new LineaCotizacionProducto();
-            linea.setProducto(producto);
-            linea.setCantidad(lineaDto.getCantidad());
-            linea.setUnidad(lineaDto.getUnidad());
-            linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
-            linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
-            linea.setCotizacionProductos(cotizacion);
-            return linea;
-        }).collect(Collectors.toList());
-
-        cotizacion.setLineas(lineas);
+        if (dto.getLineas() != null) {
+            cotizacion.setLineas(dto.getLineas().stream().map(lineaDto -> {
+                Producto producto = productoRepository.findByIdAndUser(lineaDto.getProductoId(), usuarioActual)
+                        .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
+                LineaCotizacionProducto linea = new LineaCotizacionProducto();
+                linea.setProducto(producto);
+                linea.setCantidad(lineaDto.getCantidad());
+                linea.setUnidad(lineaDto.getUnidad());
+                linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
+                linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
+                linea.setCotizacionProductos(cotizacion);
+                return linea;
+            }).collect(Collectors.toList()));
+        }
         return mapToProductosDTO(cotizacionRepository.save(cotizacion));
     }
 
@@ -131,17 +134,19 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
         cotizacion.getLineas().clear();
-        List<LineaCotizacionServicio> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
-            LineaCotizacionServicio linea = new LineaCotizacionServicio();
-            linea.setConcepto(lineaDto.getConcepto());
-            linea.setCantidad(lineaDto.getCantidad());
-            linea.setUnidad(lineaDto.getUnidad());
-            linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
-            linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
-            linea.setCotizacionServicios(cotizacion);
-            return linea;
-        }).collect(Collectors.toList());
-        cotizacion.getLineas().addAll(nuevasLineas);
+        if (dto.getLineas() != null) {
+            List<LineaCotizacionServicio> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
+                LineaCotizacionServicio linea = new LineaCotizacionServicio();
+                linea.setConcepto(lineaDto.getConcepto());
+                linea.setCantidad(lineaDto.getCantidad());
+                linea.setUnidad(lineaDto.getUnidad());
+                linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
+                linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
+                linea.setCotizacionServicios(cotizacion);
+                return linea;
+            }).collect(Collectors.toList());
+            cotizacion.getLineas().addAll(nuevasLineas);
+        }
 
         return mapToServiciosDTO(cotizacionRepository.save(cotizacion));
     }
@@ -167,19 +172,21 @@ public class CotizacionServiceImpl implements CotizacionService {
         cotizacion.setPorcentajeIva(dto.getPorcentajeIva());
 
         cotizacion.getLineas().clear();
-        List<LineaCotizacionProducto> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
-            Producto producto = productoRepository.findByIdAndUser(lineaDto.getProductoId(), usuarioActual)
-                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
-            LineaCotizacionProducto linea = new LineaCotizacionProducto();
-            linea.setProducto(producto);
-            linea.setCantidad(lineaDto.getCantidad());
-            linea.setUnidad(lineaDto.getUnidad());
-            linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
-            linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
-            linea.setCotizacionProductos(cotizacion);
-            return linea;
-        }).collect(Collectors.toList());
-        cotizacion.getLineas().addAll(nuevasLineas);
+        if (dto.getLineas() != null) {
+            List<LineaCotizacionProducto> nuevasLineas = dto.getLineas().stream().map(lineaDto -> {
+                Producto producto = productoRepository.findByIdAndUser(lineaDto.getProductoId(), usuarioActual)
+                        .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + lineaDto.getProductoId()));
+                LineaCotizacionProducto linea = new LineaCotizacionProducto();
+                linea.setProducto(producto);
+                linea.setCantidad(lineaDto.getCantidad());
+                linea.setUnidad(lineaDto.getUnidad());
+                linea.setPrecioUnitario(lineaDto.getPrecioUnitario());
+                linea.setSubtotal(lineaDto.getPrecioUnitario().multiply(BigDecimal.valueOf(lineaDto.getCantidad())));
+                linea.setCotizacionProductos(cotizacion);
+                return linea;
+            }).collect(Collectors.toList());
+            cotizacion.getLineas().addAll(nuevasLineas);
+        }
 
         return mapToProductosDTO(cotizacionRepository.save(cotizacion));
     }
@@ -190,26 +197,34 @@ public class CotizacionServiceImpl implements CotizacionService {
         User usuarioActual = usuarioService.getUsuarioActual();
         Cotizacion cotizacion = cotizacionRepository.findByIdAndUser(id, usuarioActual)
                 .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + id));
+        return mapCotizacionToObjectDto(cotizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Object> findAllByUser(Pageable pageable) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        Page<Cotizacion> cotizacionesPage = cotizacionRepository.findAllByUser(usuarioActual, pageable);
+        return cotizacionesPage.map(this::mapCotizacionToObjectDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Object> findAllByUserForExport() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        List<Cotizacion> cotizaciones = cotizacionRepository.findAllByUser(usuarioActual);
+        return cotizaciones.stream()
+                .map(this::mapCotizacionToObjectDto)
+                .collect(Collectors.toList());
+    }
+
+    private Object mapCotizacionToObjectDto(Cotizacion cotizacion) {
         if (cotizacion instanceof CotizacionServicios) {
             return mapToServiciosDTO((CotizacionServicios) cotizacion);
         } else if (cotizacion instanceof CotizacionProductos) {
             return mapToProductosDTO((CotizacionProductos) cotizacion);
         }
-        throw new IllegalStateException("Tipo de cotización desconocido: " + cotizacion.getClass().getName());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Object> findAllByUser() {
-        User usuarioActual = usuarioService.getUsuarioActual();
-        return cotizacionRepository.findAllByUser(usuarioActual).stream().map(cotizacion -> {
-            if (cotizacion instanceof CotizacionServicios) {
-                return mapToServiciosDTO((CotizacionServicios) cotizacion);
-            } else if (cotizacion instanceof CotizacionProductos) {
-                return mapToProductosDTO((CotizacionProductos) cotizacion);
-            }
-            return null;
-        }).filter(java.util.Objects::nonNull).collect(Collectors.toList());
+        return null;
     }
 
     private String generarFolioUnico() {
@@ -217,6 +232,7 @@ public class CotizacionServiceImpl implements CotizacionService {
     }
 
     private EmpresaDTO mapToEmpresaDTO(Empresa empresa) {
+        if (empresa == null) return null;
         EmpresaDTO dto = new EmpresaDTO();
         dto.setId(empresa.getId());
         dto.setNombreEmpresa(empresa.getNombreEmpresa());
@@ -265,7 +281,7 @@ public class CotizacionServiceImpl implements CotizacionService {
                     .filter(java.util.Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            if (cotizacion.isAplicarIva()) {
+            if (cotizacion.isAplicarIva() && cotizacion.getPorcentajeIva() != null) {
                 BigDecimal iva = subtotal.multiply(cotizacion.getPorcentajeIva());
                 dto.setTotal(subtotal.add(iva));
             } else {
@@ -312,7 +328,7 @@ public class CotizacionServiceImpl implements CotizacionService {
                     .filter(java.util.Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            if (cotizacion.isAplicarIva()) {
+            if (cotizacion.isAplicarIva() && cotizacion.getPorcentajeIva() != null) {
                 BigDecimal iva = subtotal.multiply(cotizacion.getPorcentajeIva());
                 dto.setTotal(subtotal.add(iva));
             } else {

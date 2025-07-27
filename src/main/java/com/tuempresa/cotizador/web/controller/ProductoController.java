@@ -3,6 +3,10 @@ package com.tuempresa.cotizador.web.controller;
 import com.tuempresa.cotizador.model.Producto;
 import com.tuempresa.cotizador.service.ProductoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +20,12 @@ public class ProductoController {
     private final ProductoService productoService;
 
     @GetMapping
-    public String listarProductos(Model model) {
-        model.addAttribute("productos", productoService.findAllByUser());
+    public String listarProductos(Model model,
+                                  @RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
+        Page<Producto> productosPage = productoService.findAllByUser(pageable);
+        model.addAttribute("productosPage", productosPage);
         return "productos/lista-productos";
     }
 

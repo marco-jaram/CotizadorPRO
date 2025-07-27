@@ -1,3 +1,4 @@
+// Contenido COMPLETO para ProductoServiceImpl.java
 package com.tuempresa.cotizador.service.impl;
 
 import com.tuempresa.cotizador.model.Producto;
@@ -6,6 +7,8 @@ import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.service.ProductoService;
 import com.tuempresa.cotizador.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,7 +19,13 @@ import java.util.Optional;
 public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
-    private final UsuarioService usuarioService; // <-- Inyección clave
+    private final UsuarioService usuarioService;
+
+    @Override
+    public Page<Producto> findAllByUser(Pageable pageable) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return productoRepository.findAllByUser(usuarioActual, pageable);
+    }
 
     @Override
     public List<Producto> findAllByUser() {

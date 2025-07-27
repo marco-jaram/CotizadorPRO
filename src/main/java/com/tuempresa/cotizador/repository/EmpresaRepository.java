@@ -2,6 +2,8 @@ package com.tuempresa.cotizador.repository;
 
 import com.tuempresa.cotizador.model.Empresa;
 import com.tuempresa.cotizador.security.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,8 +14,8 @@ import java.util.Optional;
 public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
 
     Optional<Empresa> findByEsMiEmpresaAndUser(boolean esMiEmpresa, User user);
+    Page<Empresa> findAllByEsMiEmpresaAndUser(boolean esMiEmpresa, User user, Pageable pageable);
     List<Empresa> findAllByEsMiEmpresaAndUser(boolean esMiEmpresa, User user);
-    List<Empresa> findAllByUser(User user);
     Optional<Empresa> findByIdAndUser(Long id, User user);
 
 }

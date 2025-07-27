@@ -14,12 +14,15 @@
         </a>
     </div>
 
+
+
     <div class="card">
         <div class="card-body">
-            <div th:if="${empresas.isEmpty()}" class="alert alert-warning">
+            <div th:if="${empresasPage.isEmpty()}" class="alert alert-warning">
                 No hay clientes registrados. ¡Crea el primero!
             </div>
-            <table th:unless="${empresas.isEmpty()}" class="table table-striped table-hover">
+
+            <table th:unless="${empresasPage.isEmpty()}" class="table table-striped table-hover">
                 <thead class="table-dark">
                 <tr>
                     <th>Nombre Empresa</th>
@@ -30,21 +33,28 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="empresa : ${empresas}">
+                <!-- MODIFICADO: Se itera sobre page.content -->
+                <tr th:each="empresa : ${empresasPage.content}">
                     <td th:text="${empresa.nombreEmpresa}">ACME S.A. de C.V.</td>
                     <td th:text="${empresa.nombreContacto}">Wile E. Coyote</td>
                     <td th:text="${empresa.correo}">contacto@acme.com</td>
                     <td th:text="${empresa.telefono}">55-1234-5678</td>
                     <td>
-                        <!-- Aquí se podrían agregar botones de editar y eliminar en el futuro -->
-                        <a href="#" class="btn btn-sm btn-info" title="Editar"><i class="bi bi-pencil-fill"></i></a>
+                        <!-- Enlace de editar corregido para ser funcional -->
+                        <a th:href="@{/empresas/editar/{id}(id=${empresa.id})}" class="btn btn-sm btn-info" title="Editar"><i class="bi bi-pencil-fill"></i></a>
                         <a href="#" class="btn btn-sm btn-danger" title="Eliminar"><i class="bi bi-trash-fill"></i></a>
                     </td>
                 </tr>
                 </tbody>
             </table>
+
+            <!-- AÑADIDO: Incluir la barra de paginación -->
+            <div th:replace="~{fragments/common :: paginationbar(page=${empresasPage}, url='/empresas')}"></div>
+
         </div>
     </div>
+
+
 </div>
 </div>
 </body>

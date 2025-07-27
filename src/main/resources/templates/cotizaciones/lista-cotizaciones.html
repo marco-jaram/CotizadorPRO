@@ -27,12 +27,15 @@
         </div>
     </div>
 
+
+
     <div class="card">
         <div class="card-body">
-            <div th:if="${cotizaciones.isEmpty()}" class="alert alert-info">
+            <div th:if="${cotizacionesPage.isEmpty()}" class="alert alert-info">
                 No hay cotizaciones registradas. ¡Crea la primera!
             </div>
-            <div class="table-responsive" th:unless="${cotizaciones.isEmpty()}">
+
+            <div class="table-responsive" th:unless="${cotizacionesPage.isEmpty()}">
                 <table class="table table-striped table-hover">
                     <thead class="table-dark">
                     <tr>
@@ -46,7 +49,8 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="c : ${cotizaciones}">
+
+                    <tr th:each="c : ${cotizacionesPage.content}">
                         <td th:text="${c.folio}">COT-123</td>
                         <td th:text="${c.cliente.nombreEmpresa}">Cliente de Ejemplo</td>
                         <td th:text="${#temporals.format(c.fechaEmision, 'dd/MM/yyyy')}">01/01/2024</td>
@@ -67,8 +71,14 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- AÑADIDO: Incluir la barra de paginación -->
+            <div th:replace="~{fragments/common :: paginationbar(page=${cotizacionesPage}, url='/cotizaciones')}"></div>
+
         </div>
     </div>
+
+
 </main>
 
 <footer th:replace="~{fragments/common :: footer}"></footer>

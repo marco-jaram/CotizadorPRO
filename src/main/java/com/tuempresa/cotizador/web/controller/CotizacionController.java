@@ -7,6 +7,10 @@ import com.tuempresa.cotizador.service.*;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -34,13 +37,19 @@ public class CotizacionController {
     private void addCommonAttributesToModel(Model model) {
         Empresa miEmpresa = empresaService.findMiEmpresaByUser().orElse(new Empresa());
         model.addAttribute("vendedor", miEmpresa);
-        model.addAttribute("clientes", empresaService.findClientesByUser());
+        model.addAttribute("clientes", empresaService.findAllClientesByUser());
+        model.addAttribute("productos", productoService.findAllByUser()); // Para el dropdown de productos
         model.addAttribute("estatusDisponibles", EstatusCotizacion.values());
     }
 
     @GetMapping
-    public String listarCotizaciones(Model model) {
-        model.addAttribute("cotizaciones", cotizacionService.findAllByUser());
+    public String listarCotizaciones(Model model,
+                                     @RequestParam(name = "page", defaultValue = "0") int page,
+                                     @RequestParam(name = "size", defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaEmision").descending());
+        Page<Object> cotizacionesPage = cotizacionService.findAllByUser(pageable);
+        model.addAttribute("cotizacionesPage", cotizacionesPage);
+        model.addAttribute("cotizaciones", cotizacionesPage.getContent()); // Para la exportación a excel
         return "cotizaciones/lista-cotizaciones";
     }
 
@@ -70,7 +79,6 @@ public class CotizacionController {
             return "redirect:/empresas/mi-empresa";
         }
         addCommonAttributesToModel(model);
-        model.addAttribute("productos", productoService.findAllByUser());
         model.addAttribute("cotizacion", new CotizacionProductosCreateDTO());
         return "cotizaciones/form-productos";
     }
@@ -170,7 +178,6 @@ public class CotizacionController {
                 }
                 model.addAttribute("cotizacion", createDto);
                 model.addAttribute("cotizacionId", id);
-                model.addAttribute("productos", productoService.findAllByUser());
                 return "cotizaciones/form-productos";
             }
             return "redirect:/cotizaciones";
@@ -190,18 +197,13 @@ public class CotizacionController {
         cotizacionService.actualizarCotizacionProductos(id, dto);
         return "redirect:/cotizaciones/" + id;
     }
+
     @GetMapping("/exportar/excel")
     public ResponseEntity<InputStreamResource> exportarCotizacionesAExcel() {
-        // 1. Obtener los datos (reutilizamos el método existente)
-        List<Object> cotizaciones = cotizacionService.findAllByUser();
-
-        // 2. Generar el archivo Excel en memoria
+        List<Object> cotizaciones = cotizacionService.findAllByUserForExport();
         ByteArrayInputStream in = excelGenerationService.generarExcelCotizaciones(cotizaciones);
-
-        // 3. Preparar la respuesta HTTP para la descarga
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=cotizaciones.xlsx");
-
         return ResponseEntity
                 .ok()
                 .headers(headers)

@@ -7,6 +7,8 @@ import com.tuempresa.cotizador.service.EmpresaService;
 import com.tuempresa.cotizador.service.UsuarioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -18,15 +20,8 @@ import java.util.Optional;
 public class EmpresaServiceImpl implements EmpresaService {
 
     private final EmpresaRepository empresaRepository;
-    private final UsuarioService usuarioService; // <-- Inyección clave
+    private final UsuarioService usuarioService;
     private static final long MAX_LOGO_SIZE = 3 * 1024 * 1024;
-
-    @Override
-    public Empresa guardarEmpresa(Empresa empresa) {
-        User usuarioActual = usuarioService.getUsuarioActual();
-        empresa.setUser(usuarioActual); // Asigna el dueño
-        return empresaRepository.save(empresa);
-    }
 
     @Override
     public Optional<Empresa> findById(Long id) {
@@ -34,22 +29,12 @@ public class EmpresaServiceImpl implements EmpresaService {
         return empresaRepository.findByIdAndUser(id, usuarioActual);
     }
 
-    @Override
-    public List<Empresa> findAllByUser() {
-        User usuarioActual = usuarioService.getUsuarioActual();
-        return empresaRepository.findAllByUser(usuarioActual);
-    }
+    // --- Operaciones con "Mi Empresa" (Vendedor) ---
 
     @Override
     public Optional<Empresa> findMiEmpresaByUser() {
         User usuarioActual = usuarioService.getUsuarioActual();
         return empresaRepository.findByEsMiEmpresaAndUser(true, usuarioActual);
-    }
-
-    @Override
-    public List<Empresa> findClientesByUser() {
-        User usuarioActual = usuarioService.getUsuarioActual();
-        return empresaRepository.findAllByEsMiEmpresaAndUser(false, usuarioActual);
     }
 
     @Override
@@ -60,7 +45,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         Empresa miEmpresaToSave = empresaRepository.findByEsMiEmpresaAndUser(true, usuarioActual)
                 .orElse(new Empresa());
 
-        miEmpresaToSave.setUser(usuarioActual); // Asigna el dueño
+        miEmpresaToSave.setUser(usuarioActual);
         miEmpresaToSave.setNombreEmpresa(empresaDataFromForm.getNombreEmpresa());
         miEmpresaToSave.setNombreContacto(empresaDataFromForm.getNombreContacto());
         miEmpresaToSave.setCorreo(empresaDataFromForm.getCorreo());
@@ -74,8 +59,6 @@ public class EmpresaServiceImpl implements EmpresaService {
             if (logoFile.getSize() > MAX_LOGO_SIZE) {
                 throw new IOException("El archivo del logo no debe exceder los 3MB.");
             }
-            // Si el logo está vacío pero ya existe uno, no lo borres.
-            // Solo actualiza si se sube un nuevo archivo.
             miEmpresaToSave.setLogo(logoFile.getBytes());
         }
 
@@ -90,5 +73,29 @@ public class EmpresaServiceImpl implements EmpresaService {
             miEmpresa.setLogo(null);
             empresaRepository.save(miEmpresa);
         });
+    }
+
+    // --- Operaciones con Clientes ---
+
+    @Override
+    public Empresa guardarCliente(Empresa cliente) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        cliente.setUser(usuarioActual);
+        cliente.setEsMiEmpresa(false); // Aseguramos que siempre se guarde como un cliente
+        return empresaRepository.save(cliente);
+    }
+
+    @Override
+    public Page<Empresa> findClientesByUser(Pageable pageable) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        // Llama al método del repositorio que acepta Pageable
+        return empresaRepository.findAllByEsMiEmpresaAndUser(false, usuarioActual, pageable);
+    }
+
+    @Override
+    public List<Empresa> findAllClientesByUser() {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        // Llama al método del repositorio que devuelve la lista completa
+        return empresaRepository.findAllByEsMiEmpresaAndUser(false, usuarioActual);
     }
 }
