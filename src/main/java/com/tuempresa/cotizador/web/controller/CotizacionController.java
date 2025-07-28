@@ -3,6 +3,7 @@ package com.tuempresa.cotizador.web.controller;
 import com.tuempresa.cotizador.exception.ResourceNotFoundException;
 import com.tuempresa.cotizador.model.Empresa;
 import com.tuempresa.cotizador.model.enums.EstatusCotizacion;
+import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.service.*;
 import com.tuempresa.cotizador.web.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class CotizacionController {
     private final ProductoService productoService;
     private final PdfGenerationService pdfGenerationService;
     private final ExcelGenerationService excelGenerationService;
+    private final UsuarioService usuarioService;
 
     private void addCommonAttributesToModel(Model model) {
         Empresa miEmpresa = empresaService.findMiEmpresaByUser().orElse(new Empresa());
@@ -55,10 +57,25 @@ public class CotizacionController {
 
     @GetMapping("/servicios/nueva")
     public String mostrarFormularioServicios(Model model, RedirectAttributes redirectAttributes) {
+
+        // --- Inicio de la Verificación de Acceso ---
+        try {
+            User usuarioActual = usuarioService.getUsuarioActual();
+            if (!usuarioService.canUserAccessFeature(usuarioActual)) {
+                redirectAttributes.addFlashAttribute("error", "Tu plan no te permite crear cotizaciones. Actualiza tu suscripción.");
+                return "redirect:/suscripcion"; // Próximamente, crearás esta página
+            }
+        } catch (IllegalStateException e) {
+            // Falla si no hay usuario en sesión, Spring Security debería manejarlo, pero es una salvaguarda.
+            return "redirect:/login";
+        }
+        // --- Fin de la Verificación de Acceso ---
+
         if (empresaService.findMiEmpresaByUser().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "¡Acción requerida! Debe configurar 'Mi Empresa' antes de poder crear una cotización.");
             return "redirect:/empresas/mi-empresa";
         }
+
         addCommonAttributesToModel(model);
         model.addAttribute("cotizacion", new CotizacionServiciosCreateDTO());
         return "cotizaciones/form-servicios";

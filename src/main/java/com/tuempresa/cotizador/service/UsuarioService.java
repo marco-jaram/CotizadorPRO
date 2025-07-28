@@ -13,4 +13,5 @@ public interface UsuarioService {
      * @return El objeto User del usuario actual.
      */
     User getUsuarioActual();
+    boolean canUserAccessFeature(User user);
 }

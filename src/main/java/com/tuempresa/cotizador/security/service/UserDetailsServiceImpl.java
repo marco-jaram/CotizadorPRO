@@ -3,12 +3,15 @@ package com.tuempresa.cotizador.security.service;
 import com.tuempresa.cotizador.security.model.User;
 import com.tuempresa.cotizador.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,15 +21,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Buscamos el usuario en nuestra BD por su email
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("No se encontró usuario con el email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("..."));
 
-        // Creamos un objeto UserDetails que Spring Security entiende
+        // Crea una lista de autoridades (roles)
+        List<GrantedAuthority> authorities = Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.emptyList() // Por ahora no manejamos roles, así que la lista de autoridades está vacía
+                authorities // Pasa la lista de roles
         );
     }
 }
