@@ -42,11 +42,12 @@
                                 <span class="badge" th:classappend="${u.role.name() == 'ADMIN' ? 'bg-danger' : 'bg-secondary'}" th:text="${u.role.name()}"></span>
                             </td>
                             <td>
-                                <span class="badge" th:classappend="${
-                                    u.subscriptionStatus.name() == 'ACTIVE' ? 'bg-success' :
-                                    u.subscriptionStatus.name() == 'TRIAL' ? 'bg-info' :
-                                    u.subscriptionStatus.name() == 'PAST_DUE' ? 'bg-warning text-dark' : 'bg-secondary'
-                                }" th:text="${u.subscriptionStatus.name()}"></span>
+                               <span class="badge" th:classappend="${
+    u.subscriptionStatus.name() == 'ACTIVE' ? 'bg-success' :
+    u.subscriptionStatus.name() == 'TRIAL' ? 'bg-info' :
+    u.subscriptionStatus.name() == 'PAST_DUE' ? 'bg-warning text-dark' :
+    u.subscriptionStatus.name() == 'PERMANENT' ? 'bg-dark' : 'bg-secondary'
+}" th:text="${u.subscriptionStatus.name()}"></span>
                             </td>
                             <td>
                                 <!-- Muestra la fecha relevante según el estado -->
@@ -55,8 +56,9 @@
                                 <span th:unless="${u.subscriptionStatus.name() == 'TRIAL' or u.subscriptionStatus.name() == 'ACTIVE' or u.subscriptionStatus.name() == 'PAST_DUE'}">-</span>
                             </td>
                             <td class="text-center">
-                                <!-- En el futuro, aquí irán los botones para editar el estado del usuario -->
-                                <a href="#" class="btn btn-sm btn-outline-primary" title="Ver/Editar Detalles"><i class="bi bi-pencil-square"></i></a>
+                                <a th:href="@{/admin/users/{id}(id=${u.userId})}" class="btn btn-sm btn-outline-primary" title="Ver/Editar Detalles">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                             </td>
                         </tr>
                         </tbody>

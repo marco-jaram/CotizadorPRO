@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header}">
+    <title>Detalles del Usuario</title>
+</head>
+<body>
+<div class="container">
+    <nav th:replace="~{fragments/common :: navbar}"></nav>
+    <main class="container mt-4">
+        <h3><i class="bi bi-person-gear"></i> Gestionar Usuario</h3>
+
+        <div class="card">
+            <div class="card-header">
+                <span th:text="${user.nombre}"></span> (<span th:text="${user.email}"></span>)
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Información Actual</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>ID Usuario:</strong> <span th:text="${user.userId}"></span></li>
+                            <li class="list-group-item"><strong>Rol:</strong> <span th:text="${user.role}"></span></li>
+                            <li class="list-group-item"><strong>Plan Actual:</strong> <span th:text="${user.planType}"></span></li>
+                            <li class="list-group-item"><strong>Estado Suscripción:</strong>
+                                <span class="badge" th:classappend="${user.subscriptionStatus.name() == 'ACTIVE' ? 'bg-success' : 'bg-secondary'}" th:text="${user.subscriptionStatus}"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Fecha de Expiración:</strong>
+                                <span th:if="${user.role.name() == 'ADMIN'}" class="text-muted fst-italic">N/A</span>
+                                <span th:unless="${user.role.name() == 'ADMIN'}" th:text="${#temporals.format(user.currentPeriodEndDate ?: user.trialEndDate, 'dd MMMM yyyy')}"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h4>Acciones Administrativas</h4>
+                        <p class="text-muted">Cambia el estado de la suscripción del usuario.</p>
+
+                        <form th:action="@{/admin/users/{id}/update-subscription(id=${user.userId})}" method="post">
+
+                            <!-- CAMPO PARA EL TIPO DE PLAN -->
+                            <div class="mb-3">
+                                <label for="planType" class="form-label"><strong>Tipo de Plan:</strong></label>
+                                <select id="planType" name="planType" class="form-select">
+                                    <option value="Mensual" th:selected="${user.planType == 'Mensual'}">Plan Mensual</option>
+                                    <option value="Anual" th:selected="${user.planType == 'Anual'}">Plan Anual</option>
+                                    <option value="Prueba Gratuita" th:selected="${user.planType == 'Prueba Gratuita'}">Prueba Gratuita</option>
+                                </select>
+                            </div>
+
+                            <!-- CAMPO PARA EL ESTADO -->
+                            <div class="mb-3">
+                                <label for="newStatus" class="form-label"><strong>Estado de Suscripción:</strong></label>
+                                <select id="newStatus" name="newStatus" class="form-select">
+                                    <option th:each="status : ${T(com.tuempresa.cotizador.model.enums.SubscriptionStatus).values()}"
+                                            th:if="${status.name() != 'PERMANENT'}"
+                                            th:value="${status}"
+                                            th:text="${status.name()}"
+                                            th:selected="${status == user.subscriptionStatus}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- CAMPO PARA ACTUALIZAR FECHA DE EXPIRACIÓN -->
+                            <div class="mb-3">
+                                <label for="newEndDate" class="form-label"><strong>Nueva Fecha de Fin de Periodo (Opcional):</strong></label>
+                                <input type="date" class="form-control" id="newEndDate" name="newEndDate"
+                                       th:value="${user.currentPeriodEndDate != null ? #temporals.format(user.currentPeriodEndDate, 'yyyy-MM-dd') : ''}">
+                                <small class="form-text text-muted">
+                                    Déjalo en blanco para no cambiarla. Si activas un plan, el sistema la calculará automáticamente.
+                                </small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" th:disabled="${user.role.name() == 'ADMIN'}">
+                                <i class="bi bi-save-fill"></i> Guardar Cambios
+                            </button>
+                            <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Cancelar</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+</div>
+</body>
+</html>

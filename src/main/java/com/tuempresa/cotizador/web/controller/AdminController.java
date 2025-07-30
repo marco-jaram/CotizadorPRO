@@ -1,6 +1,8 @@
 package com.tuempresa.cotizador.web.controller;
 
+import com.tuempresa.cotizador.model.enums.SubscriptionStatus;
 import com.tuempresa.cotizador.service.AdminService;
+import com.tuempresa.cotizador.web.dto.admin.SubscriptionUpdateDTO;
 import com.tuempresa.cotizador.web.dto.admin.UserSubscriptionDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,9 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin")
@@ -44,8 +45,6 @@ public class AdminController {
         return "admin/dashboard";
     }
 
-    // Aquí podrías añadir más métodos para ver detalles de un usuario o actualizar su estado.
-    /*
     @GetMapping("/users/{id}")
     public String viewUserDetails(@PathVariable Long id, Model model) {
         UserSubscriptionDTO userDto = adminService.getUserWithSubscriptionDetails(id);
@@ -53,11 +52,15 @@ public class AdminController {
         return "admin/user-details";
     }
 
-    @PostMapping("/users/{id}/update-status")
-    public String updateSubscriptionStatus(@PathVariable Long id, @RequestParam SubscriptionStatus status, RedirectAttributes redirectAttributes) {
-        adminService.updateUserSubscriptionStatus(id, status);
-        redirectAttributes.addFlashAttribute("successMessage", "Estado del usuario actualizado correctamente.");
+    @PostMapping("/users/{id}/update-subscription")
+    public String updateSubscription(@PathVariable Long id,
+                                     @ModelAttribute SubscriptionUpdateDTO updateDTO,
+                                     RedirectAttributes redirectAttributes) {
+
+        // Ahora llamamos al nuevo método del servicio, que es más completo.
+        adminService.updateSubscription(id, updateDTO);
+
+        redirectAttributes.addFlashAttribute("successMessage", "La suscripción del usuario ha sido actualizada correctamente.");
         return "redirect:/admin/dashboard";
     }
-    */
 }

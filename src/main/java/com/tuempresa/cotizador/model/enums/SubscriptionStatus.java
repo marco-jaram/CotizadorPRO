@@ -5,5 +5,6 @@ public enum SubscriptionStatus {
     ACTIVE,     // Suscripción pagada y activa
     PAST_DUE,   // Pago vencido
     CANCELED,   // Cancelada por el usuario
-    EXPIRED     // Expiró y no se renovó
+    EXPIRED,
+    PERMANENT
 }

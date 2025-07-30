@@ -1,6 +1,7 @@
 package com.tuempresa.cotizador.service;
 
 import com.tuempresa.cotizador.model.enums.SubscriptionStatus;
+import com.tuempresa.cotizador.web.dto.admin.SubscriptionUpdateDTO;
 import com.tuempresa.cotizador.web.dto.admin.UserSubscriptionDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,5 +28,6 @@ public interface AdminService {
      * @param userId El ID del usuario cuya suscripción se actualizará.
      * @param newStatus El nuevo estado para la suscripción.
      */
-    void updateUserSubscriptionStatus(Long userId, SubscriptionStatus newStatus);
+
+    void updateSubscription(Long userId, SubscriptionUpdateDTO updateDTO);
 }
