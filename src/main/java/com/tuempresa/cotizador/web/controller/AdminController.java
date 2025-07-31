@@ -19,29 +19,30 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AdminController {
 
-    // Inyectamos el servicio que contendrá la lógica de negocio del administrador.
-    // Este servicio es el que debes implementar a continuación.
+
     private final AdminService adminService;
 
-    /**
-     * Muestra el dashboard principal del administrador con una lista paginada de todos los usuarios.
-     */
     @GetMapping("/dashboard")
     public String showDashboard(Model model,
                                 @RequestParam(defaultValue = "0") int page,
-                                @RequestParam(defaultValue = "15") int size) {
+                                @RequestParam(defaultValue = "15") int size,
+                                @RequestParam(required = false) String keyword,
+                                @RequestParam(required = false) com.tuempresa.cotizador.security.model.Role role,
+                                @RequestParam(required = false) SubscriptionStatus status) {
 
-        // Preparamos la paginación, ordenando por el ID del usuario.
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Page<UserSubscriptionDTO> usersPage = adminService.getAllUsersWithSubscription(pageable, keyword, role, status);
 
-        // Llamamos al servicio para obtener los datos.
-        Page<UserSubscriptionDTO> usersPage = adminService.getAllUsersWithSubscription(pageable);
-
-        // Añadimos la página de datos al modelo para que la vista pueda usarla.
+        // Añadimos los filtros al modelo para mantener sus valores en el formulario
         model.addAttribute("usersPage", usersPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("selectedRole", role);
+        model.addAttribute("selectedStatus", status);
 
-        // Devolvemos el nombre de la plantilla de Thymeleaf a renderizar.
-        // Esta plantilla la tendrás que crear en: resources/templates/admin/dashboard.html
+        // Pasamos los enums a la vista para rellenar los dropdowns
+        model.addAttribute("roles", com.tuempresa.cotizador.security.model.Role.values());
+        model.addAttribute("statuses", SubscriptionStatus.values());
+
         return "admin/dashboard";
     }
 

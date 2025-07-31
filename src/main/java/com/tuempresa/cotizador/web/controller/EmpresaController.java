@@ -29,10 +29,17 @@ public class EmpresaController {
     @GetMapping
     public String listarEmpresas(Model model,
                                  @RequestParam(name = "page", defaultValue = "0") int page,
-                                 @RequestParam(name = "size", defaultValue = "10") int size) {
+                                 @RequestParam(name = "size", defaultValue = "10") int size,
+                                 @RequestParam(name = "keyword", required = false) String keyword) {
         // Creamos el objeto Pageable para la consulta, ordenando por nombre de empresa
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombreEmpresa").ascending());
         Page<Empresa> empresasPage = empresaService.findClientesByUser(pageable);
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            empresasPage = empresaService.searchClientesByUser(keyword, pageable);
+            model.addAttribute("keyword", keyword); // Pasar el keyword a la vista para mantenerlo en el input
+        } else {
+            empresasPage = empresaService.findClientesByUser(pageable);
+        }
         model.addAttribute("empresasPage", empresasPage);
         return "empresas/lista-empresas";
     }

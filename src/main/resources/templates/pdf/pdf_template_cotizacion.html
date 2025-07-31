@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8"/>
     <title>Cotización</title>
-    <!-- Estilos CSS (sin cambios) -->
     <style type="text/css">
+        /* Estilos sin cambios */
         body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #333; }
         @page {
             size: A4;
@@ -24,7 +24,6 @@
         }
         .header-left { display: table-cell; width: 60%; vertical-align: middle; }
         .header-right { display: table-cell; width: 40%; text-align: right; vertical-align: middle; }
-        .company-logo img { max-width: 150px; max-height: 70px; }
         .quote-title h1 { margin: 0; color: #0056b3; font-size: 28px; font-weight: bold; }
         .quote-title p { margin: 3px 0; font-size: 11px; }
 
@@ -58,54 +57,25 @@
         .text-center { text-align: center; }
         .no-border { border: none; }
 
-        /* CORRECCIÓN: Contenedor para la parte principal */
-        .main-content {
-            clear: both;
-        }
-        .totals-section {
-            float: right;
-            width: 45%;
-            margin-top: 10px;
-            page-break-inside: avoid;
-        }
+        .main-content { clear: both; }
+        .totals-section { float: right; width: 45%; margin-top: 10px; page-break-inside: avoid; }
         .totals-section table td { border: none; padding: 5px 8px; font-size: 11px; }
         .totals-section .total-label { font-weight: bold; }
-        .totals-section .grand-total {
-            font-weight: bold;
-            font-size: 14px;
-            color: #0056b3;
-            border-top: 2px solid #333;
-            background-color: #f2f2f2;
-        }
-
-        .terms-section {
-            clear: both; /* Asegura que empiece debajo de todo lo anterior */
-            margin-top: 30px;
-            page-break-inside: avoid;
-        }
+        .totals-section .grand-total { font-weight: bold; font-size: 14px; color: #0056b3; border-top: 2px solid #333; background-color: #f2f2f2; }
+        .terms-section { clear: both; margin-top: 30px; page-break-inside: avoid; }
         .terms-section h5 { font-size: 12px; color: #0056b3; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         .terms-section p { font-size: 10px; margin-bottom: 8px; }
         .terms-section strong { display: block; margin-bottom: 3px; }
 
-        .footer {
-            position: fixed;
-            bottom: -1.2cm;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 9px;
-            color: #777;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
-        }
+        .footer { position: fixed; bottom: -1.2cm; left: 0; right: 0; text-align: center; font-size: 9px; color: #777; border-top: 1px solid #ccc; padding-top: 5px; }
     </style>
 </head>
 <body>
 
-<!-- Header e Info Section (sin cambios) -->
 <div class="header">
     <div class="header-left company-logo">
-        <img th:if="${logoBase64 != ''}" th:src="${logoBase64}" alt="Logo de la Empresa"/>
+        <!-- ===> LA CORRECCIÓN DEFINITIVA ESTÁ EN ESTA LÍNEA <=== -->
+        <img th:if="${logoBase64 != ''}" th:src="${logoBase64}" alt="Logo de la Empresa" style="width: 200px; height: auto;"/>
         <h2 th:unless="${logoBase64 != ''}" th:text="${cotizacion.vendedor.nombreEmpresa}" style="color: #333;"></h2>
     </div>
     <div class="header-right quote-title">
@@ -137,11 +107,8 @@
     </div>
 </div>
 
-
-<!-- CORRECCIÓN: Contenedor principal que envuelve tabla, totales y términos -->
 <div class="main-content">
-
-    <!-- Tablas dinámicas (Servicios o Productos) -->
+    <!-- El resto del archivo no necesita cambios -->
     <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
         <table>
             <thead>
@@ -187,7 +154,6 @@
         </table>
     </div>
 
-    <!-- Sección de totales (ahora se renderiza inmediatamente después de la tabla) -->
     <div class="totals-section">
         <table>
             <tr>
@@ -205,10 +171,8 @@
         </table>
     </div>
 
-    <!-- Sección de términos y condiciones (ahora se renderiza al final) -->
     <div class="terms-section">
         <h5>Términos y Condiciones</h5>
-        <!-- Términos para Servicios -->
         <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionServiciosDTO)}">
             <p th:if="${cotizacion.descripcionGeneral != null and cotizacion.descripcionGeneral != ''}"><strong>Descripción General:</strong> <span th:text="${cotizacion.descripcionGeneral}"></span></p>
             <p th:if="${cotizacion.formaPago != null and cotizacion.formaPago != ''}"><strong>Forma de Pago:</strong> <span th:text="${cotizacion.formaPago}"></span></p>
@@ -216,7 +180,6 @@
             <p th:if="${cotizacion.condicionesEntrega != null and cotizacion.condicionesEntrega != ''}"><strong>Condiciones de Entrega:</strong> <span th:text="${cotizacion.condicionesEntrega}"></span></p>
             <p th:if="${cotizacion.tiempoRespuesta != null and cotizacion.tiempoRespuesta != ''}"><strong>Tiempo de Respuesta:</strong> <span th:text="${cotizacion.tiempoRespuesta}"></span></p>
         </div>
-        <!-- Términos para Productos -->
         <div th:if="${cotizacion instanceof T(com.tuempresa.cotizador.web.dto.CotizacionProductosDTO)}">
             <p th:if="${cotizacion.formasPago != null and cotizacion.formasPago != ''}"><strong>Formas de Pago:</strong> <span th:text="${cotizacion.formasPago}"></span></p>
             <p th:if="${cotizacion.condicionesEntrega != null and cotizacion.condicionesEntrega != ''}"><strong>Condiciones de Entrega:</strong> <span th:text="${cotizacion.condicionesEntrega}"></span></p>
@@ -226,9 +189,11 @@
     </div>
 </div>
 
-<!-- Footer (sin cambios) -->
 <div class="footer">
-    <p th:text="${cotizacion.vendedor.nombreEmpresa} + ' - ' + ${cotizacion.vendedor.sitioWeb}"></p>
+    <p>
+        <span th:text="${cotizacion.vendedor.nombreEmpresa}"></span>
+        <span th:if="${cotizacion.vendedor.sitioWeb != null and cotizacion.vendedor.sitioWeb != ''}" th:text="' - ' + ${cotizacion.vendedor.sitioWeb}"></span>
+    </p>
     <p>Gracias por su preferencia.</p>
 </div>
 

@@ -22,9 +22,16 @@ public class ProductoController {
     @GetMapping
     public String listarProductos(Model model,
                                   @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(defaultValue = "10") int size) {
+                                  @RequestParam(defaultValue = "10") int size,
+                                  @RequestParam(name = "keyword", required = false) String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
         Page<Producto> productosPage = productoService.findAllByUser(pageable);
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            productosPage = productoService.searchByUser(keyword, pageable);
+            model.addAttribute("keyword", keyword); // Pasar el keyword a la vista
+        } else {
+            productosPage = productoService.findAllByUser(pageable);
+        }
         model.addAttribute("productosPage", productosPage);
         return "productos/lista-productos";
     }

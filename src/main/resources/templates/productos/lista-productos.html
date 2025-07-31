@@ -27,7 +27,27 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-
+        <!-- ===== INICIO: FORMULARIO DE BÚSQUEDA ===== -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form th:action="@{/productos}" method="get" class="row g-3 align-items-center">
+                    <div class="col">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" name="keyword" class="form-control"
+                                   placeholder="Buscar por SKU, nombre o especificación..." th:value="${keyword}">
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-info">Buscar</button>
+                    </div>
+                    <div class="col-auto">
+                        <a th:href="@{/productos}" class="btn btn-secondary">Limpiar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- ===== FIN: FORMULARIO DE BÚSQUEDA ===== -->
 
         <div class="card">
             <div class="card-body">
@@ -63,7 +83,7 @@
                 </div>
 
 
-                <div th:replace="~{fragments/common :: paginationbar(page=${productosPage}, url='/productos')}"></div>
+                <div th:replace="~{fragments/common :: paginationbar(page=${productosPage}, url='/productos', keyword=${keyword ?: ''})}"></div>
 
             </div>
         </div>

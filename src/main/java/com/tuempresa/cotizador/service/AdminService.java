@@ -9,11 +9,15 @@ import org.springframework.data.domain.Pageable;
 public interface AdminService {
 
     /**
-     * Obtiene una lista paginada de todos los usuarios con los detalles de su suscripción.
+     * Obtiene una lista paginada de todos los usuarios con los detalles de su suscripción,
+     * aplicando filtros de búsqueda opcionales.
      * @param pageable Configuración de paginación.
+     * @param keyword Término de búsqueda para nombre o email.
+     * @param role Rol del usuario a filtrar.
+     * @param status Estado de la suscripción a filtrar.
      * @return Una página de DTOs con información combinada de usuario y suscripción.
      */
-    Page<UserSubscriptionDTO> getAllUsersWithSubscription(Pageable pageable);
+    Page<UserSubscriptionDTO> getAllUsersWithSubscription(Pageable pageable, String keyword, com.tuempresa.cotizador.security.model.Role role, SubscriptionStatus status);
 
     /**
      * Obtiene los detalles de un usuario y su suscripción por ID.
@@ -23,11 +27,9 @@ public interface AdminService {
     UserSubscriptionDTO getUserWithSubscriptionDetails(Long userId);
 
     /**
-     * Actualiza el estado de la suscripción de un usuario.
-     * Este método solo debería afectar a usuarios con rol USER.
-     * @param userId El ID del usuario cuya suscripción se actualizará.
-     * @param newStatus El nuevo estado para la suscripción.
+     * Actualiza la suscripción de un usuario.
+     * @param userId El ID del usuario.
+     * @param updateDTO DTO con la información a actualizar.
      */
-
     void updateSubscription(Long userId, SubscriptionUpdateDTO updateDTO);
 }

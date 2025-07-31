@@ -47,9 +47,17 @@ public class CotizacionController {
     @GetMapping
     public String listarCotizaciones(Model model,
                                      @RequestParam(name = "page", defaultValue = "0") int page,
-                                     @RequestParam(name = "size", defaultValue = "10") int size) {
+                                     @RequestParam(name = "size", defaultValue = "10") int size,
+    @RequestParam(name = "keyword", required = false) String keyword){
         Pageable pageable = PageRequest.of(page, size, Sort.by("fechaEmision").descending());
         Page<Object> cotizacionesPage = cotizacionService.findAllByUser(pageable);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            cotizacionesPage = cotizacionService.searchByUser(keyword, pageable);
+            model.addAttribute("keyword", keyword); // Pasar el keyword a la vista para mantenerlo en el input
+        } else {
+            cotizacionesPage = cotizacionService.findAllByUser(pageable);
+        }
         model.addAttribute("cotizacionesPage", cotizacionesPage);
         model.addAttribute("cotizaciones", cotizacionesPage.getContent()); // Para la exportación a excel
         return "cotizaciones/lista-cotizaciones";

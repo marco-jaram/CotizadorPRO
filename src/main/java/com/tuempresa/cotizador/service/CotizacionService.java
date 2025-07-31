@@ -18,4 +18,5 @@ public interface CotizacionService {
     Object findById(Long id);
     List<Object> findAllByUserForExport();
     Page<Object> findAllByUser(Pageable pageable);
+    Page<Object> searchByUser(String keyword, Pageable pageable);
 }

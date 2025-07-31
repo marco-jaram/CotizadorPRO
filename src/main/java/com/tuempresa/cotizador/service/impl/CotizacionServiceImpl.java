@@ -337,4 +337,11 @@ public class CotizacionServiceImpl implements CotizacionService {
         }
         return dto;
     }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Object> searchByUser(String keyword, Pageable pageable) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        Page<Cotizacion> cotizacionesPage = cotizacionRepository.searchByUser(usuarioActual, keyword, pageable);
+        return cotizacionesPage.map(this::mapCotizacionToObjectDto);
+    }
 }

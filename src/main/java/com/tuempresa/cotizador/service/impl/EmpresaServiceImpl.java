@@ -98,4 +98,9 @@ public class EmpresaServiceImpl implements EmpresaService {
         // Llama al método del repositorio que devuelve la lista completa
         return empresaRepository.findAllByEsMiEmpresaAndUser(false, usuarioActual);
     }
+    @Override
+    public Page<Empresa> searchClientesByUser(String keyword, Pageable pageable) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return empresaRepository.searchClientesByUser(usuarioActual, keyword, pageable);
+    }
 }

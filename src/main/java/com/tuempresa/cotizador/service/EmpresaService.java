@@ -18,5 +18,6 @@ public interface EmpresaService {
     Empresa guardarCliente(Empresa cliente);
     Page<Empresa> findClientesByUser(Pageable pageable);
     List<Empresa> findAllClientesByUser();
+    Page<Empresa> searchClientesByUser(String keyword, Pageable pageable);
 
 }

@@ -14,4 +14,5 @@ public interface ProductoService {
     Optional<Producto> findById(Long id);
     Producto guardarProducto(Producto producto);
     void eliminarProducto(Long id);
+    Page<Producto> searchByUser(String keyword, Pageable pageable);
 }

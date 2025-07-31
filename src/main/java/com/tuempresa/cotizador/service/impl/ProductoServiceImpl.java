@@ -54,4 +54,9 @@ public class ProductoServiceImpl implements ProductoService {
             productoRepository.deleteById(id);
         });
     }
+    @Override
+    public Page<Producto> searchByUser(String keyword, Pageable pageable) {
+        User usuarioActual = usuarioService.getUsuarioActual();
+        return productoRepository.searchByUser(usuarioActual, keyword, pageable);
+    }
 }
